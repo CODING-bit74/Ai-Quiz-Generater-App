@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "937547906227",
+    "project_id": "ai-quiz-tutor",
+    "storage_bucket": "ai-quiz-tutor.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:937547906227:android:9d117b819c7d61d3bb04c6",
+        "android_client_info": {
+          "package_name": "com.example.test_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCm_wVPxISG3NcpQGMAMf2A47Vg2aIQ_JY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
