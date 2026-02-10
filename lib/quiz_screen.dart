@@ -12,18 +12,24 @@ class QuizScreen extends StatelessWidget {
     // Instantiate the controller
     final QuizController controller = Get.put(QuizController());
 
+    // Flattened themeController variable usage to avoid unused warning if not used in build directly yet.
+    // final ThemeController themeController = Get.find();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       resizeToAvoidBottomInset: true,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF1E293B).withOpacity(0.5),
-              const Color(0xFF0F172A),
-            ],
+            colors: isDark
+                ? [
+                    const Color(0xFF1E293B).withOpacity(0.5),
+                    const Color(0xFF0F172A),
+                  ]
+                : [Colors.white, const Color(0xFFF1F5F9)],
           ),
         ),
         child: SafeArea(
@@ -38,7 +44,7 @@ class QuizScreen extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
               ),
-              Expanded(child: _buildBody(controller)),
+              Expanded(child: _buildBody(context, controller)),
             ],
           ),
         ),
@@ -76,24 +82,21 @@ class QuizScreen extends StatelessWidget {
               controller.isQuizActive.value
                   ? "QUESTION ${controller.currentQuestionIndex.value + 1}/${controller.questions.length}"
                   : "PREPARATION LAB",
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 2,
               ),
             ),
           ),
-          const Opacity(
-            opacity: 0,
-            child: IconButton(icon: Icon(Icons.menu), onPressed: null),
-          ),
+          const SizedBox(width: 48), // Spacer to balance the back button
         ],
       ),
     );
   }
 
-  Widget _buildBody(QuizController controller) {
+  Widget _buildBody(BuildContext context, QuizController controller) {
     return Obx(() {
       if (controller.isLoading.value && controller.questions.isEmpty) {
         return Center(
@@ -109,10 +112,10 @@ class QuizScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 "CRAFTING YOUR QUIZ",
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 3,
@@ -122,7 +125,9 @@ class QuizScreen extends StatelessWidget {
               Text(
                 "Applying SSC, Banking & UPSC Exam Standards",
                 style: TextStyle(
-                  color: Colors.blue[200],
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
                   fontSize: 13,
                   letterSpacing: 0.5,
                 ),
@@ -133,26 +138,27 @@ class QuizScreen extends StatelessWidget {
       }
 
       if (controller.isShowingPlayground.value) {
-        return _buildPlaygroundView(controller);
+        return _buildPlaygroundView(context, controller);
       }
 
       if (controller.isQuizActive.value && controller.questions.isNotEmpty) {
-        return _buildGameplayView(controller);
+        return _buildGameplayView(context, controller);
       }
 
       if (controller.isReviewing.value) {
-        return _buildReviewView(controller);
+        return _buildReviewView(context, controller);
       }
 
       if (controller.isQuizFinished.value && controller.questions.isNotEmpty) {
-        return _buildResultsView(controller);
+        return _buildResultsView(context, controller);
       }
 
-      return _buildConfigurationView(controller);
+      return _buildConfigurationView(context, controller);
     });
   }
 
-  Widget _buildPlaygroundView(QuizController controller) {
+  Widget _buildPlaygroundView(BuildContext context, QuizController controller) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       children: [
         // Dynamic Background Elements
@@ -183,7 +189,9 @@ class QuizScreen extends StatelessWidget {
                         padding: const EdgeInsets.all(30),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.05),
+                          color: isDark
+                              ? Colors.white.withOpacity(0.05)
+                              : Colors.black.withOpacity(0.05),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.blue.withOpacity(0.3 * value),
@@ -192,7 +200,9 @@ class QuizScreen extends StatelessWidget {
                             ),
                           ],
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
+                            color: isDark
+                                ? Colors.white.withOpacity(0.2)
+                                : Colors.black.withOpacity(0.1),
                             width: 2,
                           ),
                         ),
@@ -201,7 +211,7 @@ class QuizScreen extends StatelessWidget {
                               .currentLogoIndex
                               .value],
                           size: 80,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     );
@@ -209,21 +219,28 @@ class QuizScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 60),
-              const Text(
+              Text(
                 "QUIZ PLAYGROUND",
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 30,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 4,
-                  shadows: [Shadow(color: Colors.blueAccent, blurRadius: 20)],
+                  shadows: [
+                    Shadow(
+                      color: Colors.blueAccent.withOpacity(0.5),
+                      blurRadius: 20,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 "Prepare for glory...",
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
                   fontSize: 16,
                   letterSpacing: 2,
                   fontStyle: FontStyle.italic,
@@ -268,7 +285,11 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildConfigurationView(QuizController controller) {
+  Widget _buildConfigurationView(
+    BuildContext context,
+    QuizController controller,
+  ) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 10, 24, 100),
       child: Column(
@@ -283,12 +304,16 @@ class QuizScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.blue.withOpacity(0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.5),
                       width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withOpacity(0.2),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.2),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
@@ -303,20 +328,22 @@ class QuizScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'MASTER LAB',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.5,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   'Configure your perfect exam session',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.5),
                   ),
                 ),
               ],
@@ -328,20 +355,37 @@ class QuizScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: isDark
+                  ? Colors.white.withOpacity(0.05)
+                  : Colors.black.withOpacity(0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.1)
+                    : Colors.black.withOpacity(0.1),
+              ),
             ),
             child: Row(
               children: [
                 Expanded(
-                  child: _buildTypeTab(controller, 'Topic', Icons.auto_awesome),
-                ),
-                Expanded(
-                  child: _buildTypeTab(controller, 'Link', Icons.link_rounded),
+                  child: _buildTypeTab(
+                    context,
+                    controller,
+                    'Topic',
+                    Icons.auto_awesome,
+                  ),
                 ),
                 Expanded(
                   child: _buildTypeTab(
+                    context,
+                    controller,
+                    'Link',
+                    Icons.link_rounded,
+                  ),
+                ),
+                Expanded(
+                  child: _buildTypeTab(
+                    context,
                     controller,
                     'Text',
                     Icons.article_rounded,
@@ -354,6 +398,7 @@ class QuizScreen extends StatelessWidget {
 
           // 3. TARGET CONFIGURATION CARD
           _buildGlassCard(
+            context,
             title: "Target Configuration",
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,7 +407,7 @@ class QuizScreen extends StatelessWidget {
                 const Text(
                   "Exam Sector",
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: Colors.grey,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -383,10 +428,16 @@ class QuizScreen extends StatelessWidget {
                             onSelected: (val) {
                               if (val) controller.setSector(sector);
                             },
-                            backgroundColor: Colors.white.withOpacity(0.05),
+                            backgroundColor: isDark
+                                ? Colors.white.withOpacity(0.05)
+                                : Colors.black.withOpacity(0.05),
                             selectedColor: Colors.blue[700],
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white60,
+                              color: isSelected
+                                  ? Colors.white
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.6),
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -397,7 +448,9 @@ class QuizScreen extends StatelessWidget {
                               side: BorderSide(
                                 color: isSelected
                                     ? Colors.blue
-                                    : Colors.white10,
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.1),
                               ),
                             ),
                             showCheckmark: false,
@@ -422,22 +475,28 @@ class QuizScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.black26,
+                    color: isDark
+                        ? Colors.black26
+                        : Colors.white.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white12),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.1),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: Obx(
                       () => DropdownButton<String>(
                         value: controller.selectedExam.value,
                         isExpanded: true,
-                        dropdownColor: const Color(0xFF1E293B),
+                        dropdownColor: Theme.of(context).cardColor,
                         icon: const Icon(
                           Icons.keyboard_arrow_down,
                           color: Colors.blue,
                         ),
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
                         items: controller
@@ -460,7 +519,7 @@ class QuizScreen extends StatelessWidget {
                 const Text(
                   "Subject Focus",
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: Colors.grey,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -481,10 +540,16 @@ class QuizScreen extends StatelessWidget {
                             onSelected: (val) {
                               if (val) controller.setSubject(subject);
                             },
-                            backgroundColor: Colors.white.withOpacity(0.05),
+                            backgroundColor: isDark
+                                ? Colors.white.withOpacity(0.05)
+                                : Colors.black.withOpacity(0.05),
                             selectedColor: Colors.purple[700],
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white60,
+                              color: isSelected
+                                  ? Colors.white
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.6),
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -495,7 +560,9 @@ class QuizScreen extends StatelessWidget {
                               side: BorderSide(
                                 color: isSelected
                                     ? Colors.purple
-                                    : Colors.white10,
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.1),
                               ),
                             ),
                             showCheckmark: false,
@@ -513,6 +580,7 @@ class QuizScreen extends StatelessWidget {
           // 4. CONTENT SOURCE CARD
           Obx(
             () => _buildGlassCard(
+              context,
               title: controller.selectedType.value == 'Topic'
                   ? "Topic Selection"
                   : "Reference Material",
@@ -585,6 +653,7 @@ class QuizScreen extends StatelessWidget {
 
           // 5. PREFERENCES CARD
           _buildGlassCard(
+            context,
             title: "Session Preferences",
             child: Column(
               children: [
@@ -660,7 +729,11 @@ class QuizScreen extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 4.0,
                                 ),
-                                child: _buildDifficultyChip(controller, level),
+                                child: _buildDifficultyChip(
+                                  context,
+                                  controller,
+                                  level,
+                                ),
                               ),
                             ),
                           )
@@ -744,7 +817,7 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGameplayView(QuizController controller) {
+  Widget _buildGameplayView(BuildContext context, QuizController controller) {
     // Determine current question and options
     final question =
         controller.questions[controller.currentQuestionIndex.value];
@@ -762,7 +835,9 @@ class QuizScreen extends StatelessWidget {
               value:
                   (controller.currentQuestionIndex.value + 1) /
                   controller.questions.length,
-              backgroundColor: Colors.white10,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.onSurface.withOpacity(0.1),
               color: Colors.blue,
               borderRadius: BorderRadius.circular(4),
             ),
@@ -804,7 +879,9 @@ class QuizScreen extends StatelessWidget {
                 () => Text(
                   "QUESTION ${controller.currentQuestionIndex.value + 1}/${controller.questions.length}",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.5),
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
@@ -816,10 +893,10 @@ class QuizScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             question['question'],
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 32),
@@ -830,8 +907,10 @@ class QuizScreen extends StatelessWidget {
                 final option = options[index];
                 final isSelected = userSelection == index;
 
-                Color borderColor = Colors.white.withOpacity(0.1);
-                Color bgColor = const Color(0xFF1E293B);
+                Color borderColor = Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.1);
+                Color bgColor = Theme.of(context).cardColor;
 
                 if (isSelected) {
                   borderColor = Colors.blue;
@@ -866,7 +945,10 @@ class QuizScreen extends StatelessWidget {
                                         : FontWeight.w500,
                                     color: isSelected
                                         ? Colors.white
-                                        : Colors.grey[400],
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.7),
                                   ),
                                 ),
                               ),
@@ -891,7 +973,7 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildResultsView(QuizController controller) {
+  Widget _buildResultsView(BuildContext context, QuizController controller) {
     if (controller.questions.isEmpty) return const SizedBox.shrink();
 
     final percentage =
@@ -940,17 +1022,23 @@ class QuizScreen extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        const Color(0xFF1E293B).withValues(alpha: 0.9),
-                        const Color(0xFF0F172A).withValues(alpha: 0.95),
+                        Theme.of(
+                          context,
+                        ).colorScheme.surface.withValues(alpha: 0.9),
+                        Theme.of(
+                          context,
+                        ).scaffoldBackgroundColor.withValues(alpha: 0.95),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(40),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.1),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.5),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 40,
                         spreadRadius: 5,
                         offset: const Offset(0, 20),
@@ -1005,9 +1093,9 @@ class QuizScreen extends StatelessWidget {
                             child: CircularProgressIndicator(
                               value: percentage / 100,
                               strokeWidth: 16,
-                              backgroundColor: Colors.white.withValues(
-                                alpha: 0.05,
-                              ),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.1),
                               color: gradientColors[0],
                               strokeCap: StrokeCap.round,
                             ),
@@ -1016,16 +1104,19 @@ class QuizScreen extends StatelessWidget {
                             children: [
                               Text(
                                 "$percentage%",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 48,
                                   fontWeight: FontWeight.w900,
-                                  color: Colors.white,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                               Text(
                                 "SCORE",
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 2,
@@ -1044,13 +1135,16 @@ class QuizScreen extends StatelessWidget {
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
                             _buildPremiumStat(
+                              context,
                               "CORRECT",
                               "$correct",
                               Colors.greenAccent,
@@ -1059,9 +1153,12 @@ class QuizScreen extends StatelessWidget {
                             Container(
                               width: 1,
                               height: 40,
-                              color: Colors.white10,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.1),
                             ),
                             _buildPremiumStat(
+                              context,
                               "WRONG",
                               "$wrong",
                               Colors.redAccent,
@@ -1070,12 +1167,15 @@ class QuizScreen extends StatelessWidget {
                             Container(
                               width: 1,
                               height: 40,
-                              color: Colors.white10,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.1),
                             ),
                             _buildPremiumStat(
+                              context,
                               "TOTAL",
                               "$total",
-                              Colors.white,
+                              Theme.of(context).colorScheme.onSurface,
                               Icons.list_alt,
                             ),
                           ],
@@ -1093,10 +1193,12 @@ class QuizScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: controller.enterReviewMode,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
                       elevation: 10,
-                      shadowColor: Colors.white.withValues(alpha: 0.2),
+                      shadowColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.4),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -1118,11 +1220,16 @@ class QuizScreen extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: controller.startNewQuiz,
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.white30, width: 2),
+                      side: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.5),
+                        width: 2,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      foregroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     child: const Text(
                       'START NEW QUIZ',
@@ -1143,6 +1250,7 @@ class QuizScreen extends StatelessWidget {
   }
 
   Widget _buildPremiumStat(
+    BuildContext context, // Added context
     String label,
     String value,
     Color color,
@@ -1163,7 +1271,9 @@ class QuizScreen extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.4),
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,
@@ -1174,7 +1284,8 @@ class QuizScreen extends StatelessWidget {
   }
 }
 
-Widget _buildReviewView(QuizController controller) {
+Widget _buildReviewView(BuildContext context, QuizController controller) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
   return Column(
     children: [
       Padding(
@@ -1182,14 +1293,17 @@ Widget _buildReviewView(QuizController controller) {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
               onPressed: controller.exitReviewMode,
             ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               "REVIEW ANSWERS",
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
@@ -1224,7 +1338,9 @@ Widget _buildReviewView(QuizController controller) {
               margin: const EdgeInsets.only(bottom: 24),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(isDark ? 0.05 : 0.02),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isCorrect
@@ -1267,8 +1383,8 @@ Widget _buildReviewView(QuizController controller) {
                       Expanded(
                         child: Text(
                           question['question'],
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1315,9 +1431,14 @@ Widget _buildReviewView(QuizController controller) {
                             child: Text(
                               option,
                               style: TextStyle(
-                                color: isThisCorrect || isSelected
-                                    ? Colors.white
-                                    : Colors.white60,
+                                color: isThisCorrect
+                                    ? Colors.green[700]
+                                    : (isSelected
+                                          ? Colors.red[700]
+                                          : Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withOpacity(0.6)),
                                 fontWeight: isThisCorrect || isSelected
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -1354,7 +1475,9 @@ Widget _buildReviewView(QuizController controller) {
                         Text(
                           question['explanation'] ?? "No explanation provided.",
                           style: TextStyle(
-                            color: Colors.blue[100],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.8),
                             fontSize: 13,
                             fontStyle: FontStyle.italic,
                           ),
@@ -1372,11 +1495,17 @@ Widget _buildReviewView(QuizController controller) {
   );
 }
 
-Widget _buildTypeTab(QuizController controller, String label, IconData icon) {
+Widget _buildTypeTab(
+  BuildContext context,
+  QuizController controller,
+  String label,
+  IconData icon,
+) {
   return GestureDetector(
     onTap: () => controller.setType(label),
     child: Obx(() {
       bool isSelected = controller.selectedType.value == label;
+      // bool isDark = Theme.of(context).brightness == Brightness.dark; // Unused
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
@@ -1389,13 +1518,17 @@ Widget _buildTypeTab(QuizController controller, String label, IconData icon) {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? Colors.white : Colors.grey,
+              color: isSelected
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
             ),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey,
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -1407,22 +1540,29 @@ Widget _buildTypeTab(QuizController controller, String label, IconData icon) {
   );
 }
 
-Widget _buildDifficultyChip(QuizController controller, String level) {
+Widget _buildDifficultyChip(
+  BuildContext context,
+  QuizController controller,
+  String level,
+) {
   return GestureDetector(
     onTap: () => controller.setDifficulty(level),
     child: Obx(() {
       bool isSelected = controller.difficulty.value == level;
+      bool isDark = Theme.of(context).brightness == Brightness.dark;
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
               ? Colors.blue.withOpacity(0.1)
-              : Colors.white.withOpacity(0.02),
+              : (isDark
+                    ? Colors.white.withOpacity(0.02)
+                    : Colors.black.withOpacity(0.02)),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? Colors.blue[400]!
-                : Colors.white.withOpacity(0.1),
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -1432,7 +1572,9 @@ Widget _buildDifficultyChip(QuizController controller, String level) {
             child: Text(
               level.toUpperCase(),
               style: TextStyle(
-                color: isSelected ? Colors.blue[200] : Colors.grey[600],
+                color: isSelected
+                    ? Colors.blue[400]
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
@@ -1445,7 +1587,12 @@ Widget _buildDifficultyChip(QuizController controller, String level) {
   );
 }
 
-Widget _buildGlassCard({required String title, required Widget child}) {
+Widget _buildGlassCard(
+  BuildContext context, {
+  required String title,
+  required Widget child,
+}) {
+  bool isDark = Theme.of(context).brightness == Brightness.dark;
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -1454,7 +1601,7 @@ Widget _buildGlassCard({required String title, required Widget child}) {
         child: Text(
           title.toUpperCase(),
           style: TextStyle(
-            color: Colors.blue[200],
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
             fontSize: 12,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.2,
@@ -1469,9 +1616,15 @@ Widget _buildGlassCard({required String title, required Widget child}) {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A).withOpacity(0.6),
+              color: isDark
+                  ? const Color(0xFF0F172A).withOpacity(0.6)
+                  : Colors.white.withOpacity(0.85),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.08),
+              ),
             ),
             child: child,
           ),

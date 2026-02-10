@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:test_project/quiz_screen.dart';
+import 'controllers/theme_controller.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -52,8 +54,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final ThemeController themeController = Get.find();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: _buildThemeToggle(context, themeController),
+
       body: Stack(
         children: [
           // Background Mesh Gradient Effect
@@ -197,10 +204,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         },
                         child: Column(
                           children: [
-                            const Text(
+                            Text(
                               "AI QUIZ AGENT",
                               style: TextStyle(
-                                color: Colors.white,
+                                color: isDark ? Colors.white : Colors.black87,
                                 fontSize: 36,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 4,
@@ -222,7 +229,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               child: Text(
                                 "Your Smart Ai Exam Companion",
                                 style: TextStyle(
-                                  color: Colors.blue[100],
+                                  color: isDark
+                                      ? Colors.blue[100]
+                                      : Colors.blue[900],
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 1,
@@ -320,10 +329,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       ),
 
                       const SizedBox(height: 32),
-                      const Text(
+                      Text(
                         "Powered by 🌟StarAppAi",
                         style: TextStyle(
-                          color: Colors.white24,
+                          color: isDark ? Colors.white24 : Colors.black26,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -338,5 +347,62 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildThemeToggle(
+    BuildContext context,
+    ThemeController themeController,
+  ) {
+    return Obx(() {
+      final isDark = themeController.isDarkMode.value;
+      return GestureDetector(
+        onTap: themeController.toggleTheme,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOutBack,
+          width: 65,
+          height: 65,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                  : [const Color(0xFFFACC15), const Color(0xFFEAB308)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (isDark ? Colors.blue : Colors.orange).withOpacity(0.4),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(32.5),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return RotationTransition(
+                    turns: animation,
+                    child: ScaleTransition(scale: animation, child: child),
+                  );
+                },
+                child: Icon(
+                  isDark ? Icons.light_mode : Icons.dark_mode,
+                  key: ValueKey<bool>(isDark),
+                  color: Colors.white,
+                  size: 30,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
   }
 }
