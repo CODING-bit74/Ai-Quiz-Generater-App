@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+// Business logic and state management controller
 import 'controllers/quiz_controller.dart';
+// Custom painter for the results celebration effect
 import 'painters/confetti_painter.dart';
 
 class QuizScreen extends StatelessWidget {
@@ -9,17 +11,19 @@ class QuizScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Instantiate the controller
+    // Inject or find the singleton instance of QuizController
     final QuizController controller = Get.put(QuizController());
 
-    // Flattened themeController variable usage to avoid unused warning if not used in build directly yet.
-    // final ThemeController themeController = Get.find();
+    // Local variable to track dark mode for manual UI adjustments
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      // Dynamic background color from the system theme
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      // Prevents UI overflow when the keyboard is active
       resizeToAvoidBottomInset: true,
       body: Container(
+        // Premium background gradient for a high-end feel
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -33,9 +37,12 @@ class QuizScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
+          // Ensures content avoids notch/system bars
           child: Column(
             children: [
+              // Custom glass-styled app bar
               _buildCustomAppBar(context),
+              // Reactive loading indicator for generation process
               Obx(
                 () => controller.isLoading.value
                     ? const LinearProgressIndicator(
@@ -44,6 +51,7 @@ class QuizScreen extends StatelessWidget {
                       )
                     : const SizedBox.shrink(),
               ),
+              // Main content area that switches based on controller state
               Expanded(child: _buildBody(context, controller)),
             ],
           ),
@@ -52,6 +60,7 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
+  /// Renders a dynamic app bar with contextual navigation
   Widget _buildCustomAppBar(BuildContext context) {
     final QuizController controller = Get.find();
     return Padding(
@@ -59,6 +68,7 @@ class QuizScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Switch between 'Close' (mid-quiz) and 'Back' (config)
           Obx(
             () => IconButton(
               icon: Icon(
@@ -70,13 +80,16 @@ class QuizScreen extends StatelessWidget {
               ),
               onPressed: () {
                 if (controller.isQuizActive.value) {
+                  // Exit active quiz session
                   controller.isQuizActive.value = false;
                 } else {
+                  // Close the entire screen
                   Navigator.pop(context);
                 }
               },
             ),
           ),
+          // Dynamic title based on session phase
           Obx(
             () => Text(
               controller.isQuizActive.value
@@ -90,14 +103,17 @@ class QuizScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 48), // Spacer to balance the back button
+          // Balanced layout spacer
+          const SizedBox(width: 48),
         ],
       ),
     );
   }
 
+  /// Orchestrates the view selection using reactive state
   Widget _buildBody(BuildContext context, QuizController controller) {
     return Obx(() {
+      // 1. Initial generation loading state
       if (controller.isLoading.value && controller.questions.isEmpty) {
         return Center(
           child: Column(
@@ -137,31 +153,37 @@ class QuizScreen extends StatelessWidget {
         );
       }
 
+      // 2. Playground transition state
       if (controller.isShowingPlayground.value) {
         return _buildPlaygroundView(context, controller);
       }
 
+      // 3. Active gameplay state
       if (controller.isQuizActive.value && controller.questions.isNotEmpty) {
         return _buildGameplayView(context, controller);
       }
 
+      // 4. Review mode (viewing correct answers)
       if (controller.isReviewing.value) {
         return _buildReviewView(context, controller);
       }
 
+      // 5. Results summary state
       if (controller.isQuizFinished.value && controller.questions.isNotEmpty) {
         return _buildResultsView(context, controller);
       }
 
+      // 6. Default: Selection and configuration UI
       return _buildConfigurationView(context, controller);
     });
   }
 
+  /// Renders a visually immersive loading experience
   Widget _buildPlaygroundView(BuildContext context, QuizController controller) {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       children: [
-        // Dynamic Background Elements
+        // Decorative glowing background elements
         Positioned(
           top: -100,
           right: -100,
@@ -176,6 +198,7 @@ class QuizScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Cycling gaming logos with elastic animations
               Obx(
                 () => TweenAnimationBuilder<double>(
                   key: ValueKey(controller.currentLogoIndex.value),
@@ -219,6 +242,7 @@ class QuizScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 60),
+              // Main playground title with neon shadow effect
               Text(
                 "QUIZ PLAYGROUND",
                 style: TextStyle(
@@ -247,6 +271,7 @@ class QuizScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 40),
+              // Visual progress bar for the delay
               SizedBox(
                 width: 200,
                 child: LinearProgressIndicator(
@@ -263,6 +288,7 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
+  /// Utility to create blurred atmospheric orbs
   Widget _buildGlowingOrb(Color color, double size) {
     return Container(
       width: size,
@@ -279,25 +305,29 @@ class QuizScreen extends StatelessWidget {
         ],
       ),
       child: BackdropFilter(
+        // Blurs underlying content for a frosted glass orb effect
         filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
         child: Container(),
       ),
     );
   }
 
+  /// Main configuration layout for setting up the quiz
   Widget _buildConfigurationView(
     BuildContext context,
     QuizController controller,
   ) {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
+      // Padding for better touch safety at bottom
       padding: const EdgeInsets.fromLTRB(24, 10, 24, 100),
       child: Column(
         children: [
-          // 1. Header & Avatar
+          // 1. BRANDING & HEADER
           Center(
             child: Column(
               children: [
+                // Avatar container with premium glow
                 Container(
                   height: 100,
                   width: 100,
@@ -351,239 +381,310 @@ class QuizScreen extends StatelessWidget {
           ),
           const SizedBox(height: 32),
 
-          // 2. Input Method Selector
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.black.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.black.withOpacity(0.1),
+          // 2. INPUT METHOD NAV BAR (Glassmorphic)
+          Center(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              // iOS-style bouncing feel
+              physics: const BouncingScrollPhysics(),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.03)
+                      : Colors.black.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.black.withOpacity(0.08),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTypeTab(
+                      context,
+                      controller,
+                      'Topic',
+                      Icons.psychology_rounded,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildTypeTab(
+                      context,
+                      controller,
+                      'Link',
+                      Icons.auto_fix_high_rounded,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildTypeTab(
+                      context,
+                      controller,
+                      'Text',
+                      Icons.smart_toy_rounded,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildTypeTab(
+                      context,
+                      controller,
+                      'Document',
+                      Icons.memory_rounded,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildTypeTab(
-                    context,
-                    controller,
-                    'Topic',
-                    Icons.auto_awesome,
-                  ),
-                ),
-                Expanded(
-                  child: _buildTypeTab(
-                    context,
-                    controller,
-                    'Link',
-                    Icons.link_rounded,
-                  ),
-                ),
-                Expanded(
-                  child: _buildTypeTab(
-                    context,
-                    controller,
-                    'Text',
-                    Icons.article_rounded,
-                  ),
-                ),
-              ],
             ),
           ),
           const SizedBox(height: 32),
 
-          // 3. TARGET CONFIGURATION CARD
-          _buildGlassCard(
-            context,
-            title: "Target Configuration",
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Sector Selector
-                const Text(
-                  "Exam Sector",
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: controller.examSectors.keys.map((sector) {
-                      return Obx(() {
-                        bool isSelected =
-                            controller.selectedSector.value == sector;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(sector),
-                            selected: isSelected,
-                            onSelected: (val) {
-                              if (val) controller.setSector(sector);
-                            },
-                            backgroundColor: isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.05),
-                            selectedColor: Colors.blue[700],
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withOpacity(0.6),
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 12,
+          // 3. TARGET EXAM SETTINGS (Only for Topic-based search)
+          Obx(
+            () => controller.selectedType.value != 'Document'
+                ? _buildGlassCard(
+                    context,
+                    title: "Target Configuration",
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Dynamic heading based on mode
+                        Obx(
+                          () => Text(
+                            controller.selectedType.value == 'Topic'
+                                ? "Exam Sector"
+                                : "Target Pattern",
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? Colors.blue
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withOpacity(0.1),
-                              ),
-                            ),
-                            showCheckmark: false,
                           ),
-                        );
-                      });
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Exam Name Dropdown
-                const Text(
-                  "Specific Exam",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.black26
-                        : Colors.white.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.1),
-                    ),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: Obx(
-                      () => DropdownButton<String>(
-                        value: controller.selectedExam.value,
-                        isExpanded: true,
-                        dropdownColor: Theme.of(context).cardColor,
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Colors.blue,
                         ),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        items: controller
-                            .examSectors[controller.selectedSector.value]!
-                            .map((exam) {
-                              return DropdownMenuItem(
-                                value: exam,
-                                child: Text(exam),
-                              );
-                            })
-                            .toList(),
-                        onChanged: (val) => controller.setExam(val!),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Subject Selector
-                const Text(
-                  "Subject Focus",
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: controller.subjects.map((subject) {
-                      return Obx(() {
-                        bool isSelected =
-                            controller.selectedSubject.value == subject;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(subject),
-                            selected: isSelected,
-                            onSelected: (val) {
-                              if (val) controller.setSubject(subject);
-                            },
-                            backgroundColor: isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.05),
-                            selectedColor: Colors.purple[700],
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withOpacity(0.6),
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? Colors.purple
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withOpacity(0.1),
-                              ),
-                            ),
-                            showCheckmark: false,
+                        const SizedBox(height: 12),
+                        // Scrollable sector chips
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: controller.examSectors.keys.map((sector) {
+                              return Obx(() {
+                                bool isSelected =
+                                    controller.selectedSector.value == sector;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: ChoiceChip(
+                                    label: Text(sector),
+                                    selected: isSelected,
+                                    onSelected: (val) {
+                                      if (val) controller.setSector(sector);
+                                    },
+                                    backgroundColor: isDark
+                                        ? Colors.white.withOpacity(0.05)
+                                        : Colors.black.withOpacity(0.05),
+                                    selectedColor: Colors.blue[700],
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withOpacity(0.6),
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      fontSize: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      side: BorderSide(
+                                        color: isSelected
+                                            ? Colors.blue
+                                            : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.1),
+                                      ),
+                                    ),
+                                    showCheckmark: false,
+                                  ),
+                                );
+                              });
+                            }).toList(),
                           ),
-                        );
-                      });
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
+                        ),
+                        // Specific Exam Dropdown
+                        Obx(
+                          () => controller.selectedType.value == 'Topic'
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      "Specific Exam",
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.6),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? Colors.black26
+                                            : Colors.white.withOpacity(0.5),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.1),
+                                        ),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          value: controller.selectedExam.value,
+                                          isExpanded: true,
+                                          dropdownColor: Theme.of(
+                                            context,
+                                          ).cardColor,
+                                          icon: const Icon(
+                                            Icons.keyboard_arrow_down,
+                                            color: Colors.blue,
+                                          ),
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          items: controller
+                                              .examSectors[controller
+                                                  .selectedSector
+                                                  .value]!
+                                              .map((exam) {
+                                                return DropdownMenuItem(
+                                                  value: exam,
+                                                  child: Text(exam),
+                                                );
+                                              })
+                                              .toList(),
+                                          onChanged: (val) =>
+                                              controller.setExam(val!),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        // Subject Selection
+                        Obx(
+                          () => controller.selectedType.value == 'Topic'
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      "Subject Focus",
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.6),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: controller.subjects.map((
+                                          subject,
+                                        ) {
+                                          return Obx(() {
+                                            bool isSelected =
+                                                controller
+                                                    .selectedSubject
+                                                    .value ==
+                                                subject;
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                right: 8,
+                                              ),
+                                              child: ChoiceChip(
+                                                label: Text(subject),
+                                                selected: isSelected,
+                                                onSelected: (val) {
+                                                  if (val)
+                                                    controller.setSubject(
+                                                      subject,
+                                                    );
+                                                },
+                                                backgroundColor: isDark
+                                                    ? Colors.white.withOpacity(
+                                                        0.05,
+                                                      )
+                                                    : Colors.black.withOpacity(
+                                                        0.05,
+                                                      ),
+                                                selectedColor:
+                                                    Colors.purple[700],
+                                                labelStyle: TextStyle(
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface
+                                                            .withOpacity(0.6),
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
+                                                  fontSize: 12,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  side: BorderSide(
+                                                    color: isSelected
+                                                        ? Colors.purple
+                                                        : Theme.of(context)
+                                                              .colorScheme
+                                                              .onSurface
+                                                              .withOpacity(0.1),
+                                                  ),
+                                                ),
+                                                showCheckmark: false,
+                                              ),
+                                            );
+                                          });
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
-          const SizedBox(height: 24),
 
-          // 4. CONTENT SOURCE CARD
+          // 4. CONTENT SOURCE (Topic Dropdown or Text Field)
           Obx(
             () => _buildGlassCard(
               context,
               title: controller.selectedType.value == 'Topic'
                   ? "Topic Selection"
-                  : "Reference Material",
+                  : (controller.selectedType.value == 'Document'
+                        ? "Book / Notes Selection"
+                        : "Reference Material"),
               child: controller.selectedType.value == 'Topic'
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,7 +692,7 @@ class QuizScreen extends StatelessWidget {
                         const Text(
                           "Detailed Topic",
                           style: TextStyle(
-                            color: Colors.white70,
+                            color: Colors.grey,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -600,21 +701,27 @@ class QuizScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
-                            color: Colors.black26,
+                            color: isDark
+                                ? Colors.black26
+                                : Colors.white.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white12),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.1),
+                            ),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               value: controller.selectedTopic.value,
                               isExpanded: true,
-                              dropdownColor: const Color(0xFF1E293B),
+                              dropdownColor: Theme.of(context).cardColor,
                               icon: const Icon(
                                 Icons.category_rounded,
                                 color: Colors.blue,
                               ),
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
                               items: controller
@@ -634,37 +741,52 @@ class QuizScreen extends StatelessWidget {
                         ),
                       ],
                     )
-                  : TextField(
-                      controller: controller.inputController,
-                      maxLines: 5,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: controller.selectedType.value == 'Link'
-                            ? "Paste URL here (e.g., https://...)"
-                            : "Paste your study notes or text here...",
-                        hintStyle: const TextStyle(color: Colors.white24),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
+                  : (controller.selectedType.value == 'Document'
+                        ? _buildDocumentSourceCard(context, controller)
+                        : TextField(
+                            controller: controller.inputController,
+                            maxLines: 5,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 14,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: controller.selectedType.value == 'Link'
+                                  ? "Paste URL here (e.g., https://...)"
+                                  : "Paste your study notes or text here...",
+                              hintStyle: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.3),
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          )),
             ),
           ),
-          const SizedBox(height: 24),
+          Obx(
+            () => controller.selectedType.value == 'Document'
+                ? const SizedBox.shrink()
+                : const SizedBox(height: 24),
+          ),
 
-          // 5. PREFERENCES CARD
+          // 5. SESSION PREFERENCES
           _buildGlassCard(
             context,
             title: "Session Preferences",
             child: Column(
               children: [
-                // Language
+                // Language Dropdown
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Language",
                       style: TextStyle(
-                        color: Colors.white60,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -673,22 +795,28 @@ class QuizScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.black26,
+                        color: isDark
+                            ? Colors.black26
+                            : Colors.white.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white12),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.1),
+                        ),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: Obx(
                           () => DropdownButton<String>(
                             value: controller.selectedLanguage.value,
                             isExpanded: true,
-                            dropdownColor: const Color(0xFF1E293B),
+                            dropdownColor: Theme.of(context).cardColor,
                             icon: const Icon(
                               Icons.language,
                               color: Colors.blue,
                             ),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.w600,
                             ),
                             items: controller.languages
@@ -707,14 +835,16 @@ class QuizScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                // Difficulty
+                // 5b. DIFFICULTY LEVEL SELECTOR
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Difficulty",
                       style: TextStyle(
-                        color: Colors.white60,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -742,21 +872,24 @@ class QuizScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                // Question Count Slider
+                // 5c. QUESTION COUNT ADJUSTER
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           "Question Count",
                           style: TextStyle(
-                            color: Colors.white60,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.6),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        // Real-time value display
                         Obx(
                           () => Text(
                             "${controller.numQuestions.value.toInt()}",
@@ -773,9 +906,11 @@ class QuizScreen extends StatelessWidget {
                         value: controller.numQuestions.value,
                         min: 5,
                         max: 20,
-                        divisions: 3,
+                        divisions: 3, // Steps: 5, 10, 15, 20
                         activeColor: Colors.blue,
-                        inactiveColor: Colors.white10,
+                        inactiveColor: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.1),
                         onChanged: (val) => controller.setNumQuestions(val),
                       ),
                     ),
@@ -787,7 +922,7 @@ class QuizScreen extends StatelessWidget {
 
           const SizedBox(height: 48),
 
-          // GENERATE BUTTON
+          // 6. PRIMARY ACTION: GENERATE
           SizedBox(
             width: double.infinity,
             height: 56,
@@ -817,8 +952,9 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
+  /// Active quiz session interface
   Widget _buildGameplayView(BuildContext context, QuizController controller) {
-    // Determine current question and options
+    // Current state extraction
     final question =
         controller.questions[controller.currentQuestionIndex.value];
     final options = question['options'] as List<dynamic>;
@@ -830,6 +966,7 @@ class QuizScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Session progress bar (top)
           Obx(
             () => LinearProgressIndicator(
               value:
@@ -846,6 +983,7 @@ class QuizScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Custom timer badge
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -864,6 +1002,7 @@ class QuizScreen extends StatelessWidget {
                       () => Text(
                         "${controller.remainingSeconds.value}s",
                         style: TextStyle(
+                          // Alert color for low time
                           color: controller.remainingSeconds.value < 10
                               ? Colors.red
                               : Colors.blue,
@@ -875,6 +1014,7 @@ class QuizScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              // Step counter (e.g., 2/10)
               Obx(
                 () => Text(
                   "QUESTION ${controller.currentQuestionIndex.value + 1}/${controller.questions.length}",
@@ -891,6 +1031,7 @@ class QuizScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
+          // THE QUESTION TEXT
           Text(
             question['question'],
             style: TextStyle(
@@ -900,6 +1041,7 @@ class QuizScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
+          // INTERACTIVE OPTIONS LIST
           Expanded(
             child: ListView.builder(
               itemCount: options.length,
@@ -912,6 +1054,7 @@ class QuizScreen extends StatelessWidget {
                 ).colorScheme.onSurface.withOpacity(0.1);
                 Color bgColor = Theme.of(context).cardColor;
 
+                // Visual feedback for selection
                 if (isSelected) {
                   borderColor = Colors.blue;
                   bgColor = Colors.blue.withOpacity(0.1);
@@ -924,6 +1067,7 @@ class QuizScreen extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: BackdropFilter(
+                        // Frosted glass effect for options
                         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
@@ -973,15 +1117,18 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
+  /// Interactive results breakdown and post-game actions
   Widget _buildResultsView(BuildContext context, QuizController controller) {
     if (controller.questions.isEmpty) return const SizedBox.shrink();
 
+    // Stats calculations
     final percentage =
         (controller.score.value / controller.questions.length * 100).toInt();
     final correct = controller.score.value;
     final total = controller.questions.length;
     final wrong = total - correct;
 
+    // Visual theme selection based on performance
     String performanceMessage;
     IconData performanceIcon;
     List<Color> gradientColors;
@@ -1006,6 +1153,7 @@ class QuizScreen extends StatelessWidget {
 
     return Stack(
       children: [
+        // Celebrate success with confetti
         if (percentage >= 80)
           Positioned.fill(child: CustomPaint(painter: ConfettiPainter())),
         Center(
@@ -1014,7 +1162,7 @@ class QuizScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Result Card
+                // MAIN RESULT CARD
                 Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
@@ -1047,7 +1195,7 @@ class QuizScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      // Badge/Icon
+                      // Mastery Badge
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
@@ -1083,7 +1231,7 @@ class QuizScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 32),
 
-                      // Score Display
+                      // THE SCORE ORB
                       Stack(
                         alignment: Alignment.center,
                         children: [
@@ -1128,7 +1276,7 @@ class QuizScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 40),
 
-                      // Improvements Stats Row
+                      // GRANULAR PERFORMANCE STATS
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
@@ -1186,7 +1334,7 @@ class QuizScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 48),
 
-                // Action Buttons
+                // POST-QUIZ FLOW ACTIONS
                 SizedBox(
                   width: double.infinity,
                   height: 60,
@@ -1249,8 +1397,9 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
+  /// Reusable stat cell for results summary
   Widget _buildPremiumStat(
-    BuildContext context, // Added context
+    BuildContext context,
     String label,
     String value,
     Color color,
@@ -1282,12 +1431,157 @@ class QuizScreen extends StatelessWidget {
       ],
     );
   }
+
+  /// Handles switching between upload zone and file dashboard
+  Widget _buildDocumentSourceCard(
+    BuildContext context,
+    QuizController controller,
+  ) {
+    return Obx(() {
+      final hasFile = controller.pickedFileName.value != null;
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: hasFile
+            ? _buildFileDashboard(context, controller)
+            : _buildUploadZone(context, controller),
+      );
+    });
+  }
+
+  /// Render the interactive upload catchment area
+  Widget _buildUploadZone(BuildContext context, QuizController controller) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: () => controller.pickFile(),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withOpacity(0.02)
+              : Colors.black.withOpacity(0.02),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          children: [
+            // Floating cloud icon
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.cloud_upload_outlined,
+                size: 32,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Tap to select book/notes",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "PDF format only (Max 200MB)",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Renders file-specific management controls once picked
+  Widget _buildFileDashboard(BuildContext context, QuizController controller) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.05)
+            : Colors.black.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.redAccent.withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        children: [
+          // PDF Icon with themed background
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.picture_as_pdf_rounded,
+              color: Colors.redAccent,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Filename and status info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  controller.pickedFileName.value ?? "",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Document Ready",
+                  style: TextStyle(
+                    color: Colors.greenAccent.shade700,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Removal trigger
+          IconButton(
+            onPressed: () => controller.removeFile(),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.redAccent,
+            ),
+            tooltip: "Remove file",
+          ),
+        ],
+      ),
+    );
+  }
 }
 
+/// Standalone view for post-quiz answer correction and learning
 Widget _buildReviewView(BuildContext context, QuizController controller) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   return Column(
     children: [
+      // View Header
       Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -1312,6 +1606,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
           ],
         ),
       ),
+      // Scrollable list of all questions with results
       Expanded(
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
@@ -1322,6 +1617,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
             final userIndex = controller.userAnswers[index];
             final correctAnswer = question['answer'];
 
+            // Locate the index of the correct answer string in the options list
             int correctIndex = -1;
             for (int i = 0; i < options.length; i++) {
               if (options[i] == correctAnswer) {
@@ -1330,6 +1626,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
               }
             }
 
+            // Status determination
             final bool isCorrect =
                 userIndex != null && options[userIndex] == correctAnswer;
             final bool isSkipped = userIndex == null || userIndex == -1;
@@ -1353,6 +1650,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Question header (Tag + Text)
                   Row(
                     children: [
                       Container(
@@ -1393,6 +1691,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  // Render all options with correctness highlights
                   ...List.generate(options.length, (optIndex) {
                     final option = options[optIndex];
                     final bool isSelected = userIndex == optIndex;
@@ -1452,6 +1751,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
                     );
                   }),
                   const SizedBox(height: 16),
+                  // AI-Generated Explanation Section
                   Container(
                     padding: const EdgeInsets.all(12),
                     width: double.infinity,
@@ -1495,6 +1795,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
   );
 }
 
+/// Helper builder for the navigation category tabs
 Widget _buildTypeTab(
   BuildContext context,
   QuizController controller,
@@ -1505,41 +1806,72 @@ Widget _buildTypeTab(
     onTap: () => controller.setType(label),
     child: Obx(() {
       bool isSelected = controller.selectedType.value == label;
-      // bool isDark = Theme.of(context).brightness == Brightness.dark; // Unused
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2563EB) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
+          gradient: isSelected
+              ? const LinearGradient(
+                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withOpacity(0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : [],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected
-                  ? Colors.white
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+        child: AnimatedScale(
+          // Subtle scale feedback when active
+          scale: isSelected ? 1.05 : 1.0,
+          duration: const Duration(milliseconds: 300),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: isSelected
+                      ? Colors.white
+                      : Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.4),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected
+                        ? Colors.white
+                        : Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.4),
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    letterSpacing: isSelected ? 0.5 : 0,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+          ),
         ),
       );
     }),
   );
 }
 
+/// Specialized chip for difficulty level selection
 Widget _buildDifficultyChip(
   BuildContext context,
   QuizController controller,
@@ -1587,6 +1919,7 @@ Widget _buildDifficultyChip(
   );
 }
 
+/// Generic wrapper for sections with glass effect and consistent headers
 Widget _buildGlassCard(
   BuildContext context, {
   required String title,
@@ -1596,6 +1929,7 @@ Widget _buildGlassCard(
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      // Section title with premium spacing
       Padding(
         padding: const EdgeInsets.only(left: 4, bottom: 8),
         child: Text(
@@ -1608,6 +1942,7 @@ Widget _buildGlassCard(
           ),
         ),
       ),
+      // Frosted Glass Content Area
       ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(

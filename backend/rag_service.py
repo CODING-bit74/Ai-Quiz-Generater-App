@@ -1,49 +1,60 @@
 import os
+# OpenAI integration for embeddings and chat models
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+# Pinecone vector database for storing and querying document embeddings
 from pinecone import Pinecone, ServerlessSpec
+# Document loaders for processing different file types
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
+# Utility to split long documents into smaller, manageable chunks
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+# Core data structures for LangChain
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
 import json
 import re
 import requests
 import tempfile
+# BeautifulSoup for web scraping and HTML parsing
 from bs4 import BeautifulSoup
 
-# Load environment variables
+# Load environment variables from .env file
 from dotenv import load_dotenv
 import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, '.env')
 load_dotenv(dotenv_path=env_path)
 
-# Configure API Keys
+# Retrieve configuration from environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX_NAME = "quiz-generator"
 
+# Warn if critical keys are missing
 if not OPENAI_API_KEY:
     print("WARNING: OPENAI_API_KEY not found in environment!")
 
 class RAGService:
+    """
+    RAGService handles the Retrieval-Augmented Generation pipeline.
+    It manages document indexing in Pinecone and quiz generation using OpenAI.
+    """
     def __init__(self):
-        # Use OpenAI Embeddings
+        # Initialize OpenAI Embeddings model for converting text to vectors
         self.embeddings = OpenAIEmbeddings(
             model="text-embedding-3-small",
             openai_api_key=OPENAI_API_KEY
         )
         
-        # Initialize Pinecone Client
+        # Connect to the Pinecone Vector Database
         self.pc = Pinecone(api_key=PINECONE_API_KEY)
         
-        # Check if index exists, if not create it
+        # Automatically create the index if it doesn't exist
         if PINECONE_INDEX_NAME not in [i.name for i in self.pc.list_indexes()]:
             print(f"Index {PINECONE_INDEX_NAME} not found. Creating...")
             from pinecone import ServerlessSpec
             self.pc.create_index(
                 name=PINECONE_INDEX_NAME,
-                dimension=1536, # OpenAI text-embedding-3-small
+                dimension=1536, # Dimension for OpenAI text-embedding-3-small
                 metric='cosine',
                 spec=ServerlessSpec(
                     cloud='aws',
@@ -52,23 +63,26 @@ class RAGService:
             )
             print(f"Index {PINECONE_INDEX_NAME} created successfully.")
 
+        # Reference the specific index for operations
         self.index = self.pc.Index(PINECONE_INDEX_NAME)
         
-        # Use GPT-4o-mini
+        # Initialize the Grand Language Model (GPT-4o-mini) for content generation
         self.llm = ChatOpenAI(
             model="gpt-4o-mini", 
-            temperature=0.7,
+            temperature=0.7, # Balanced randomness for unique quizes
             openai_api_key=OPENAI_API_KEY
         )
+        
+        # Configure the text splitter for document indexing
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
 
     def add_text_to_knowledge_base(self, text: str, metadata: dict = None):
-        """Adds raw text to the Pinecone vector database."""
+        """Adds raw text strings to the Pinecone vector database."""
         try:
-            # Split text into chunks
+            # Step 1: Break text into smaller overlapping chunks
             chunks = self.text_splitter.split_text(text)
             
-            # Embed chunks
+            # Step 2: Convert each chunk into an embedding vector
             vectors = []
             for i, chunk in enumerate(chunks):
                 embedding = self.embeddings.embed_query(chunk)
@@ -79,7 +93,7 @@ class RAGService:
                     "metadata": {**(metadata or {}), "text": chunk}
                 })
             
-            # Upsert in batches of 100
+            # Step 3: Upload the vectors to Pinecone
             self.index.upsert(vectors=vectors)
             print(f"Added context: {text[:50]}... ({len(vectors)} chunks) to Pinecone")
             return True
@@ -88,18 +102,22 @@ class RAGService:
             return False
 
     def add_document_file(self, file_path: str, filename: str):
-        """Parses a file (PDF/Text) and adds it to the vector store."""
+        """Processes a PDF or Text file and indexes its content in Pinecone."""
         print(f"Processing document: {filename}")
         try:
+            # Choose the appropriate loader based on file extension
             if filename.lower().endswith('.pdf'):
                 loader = PyPDFLoader(file_path)
             else:
                 loader = TextLoader(file_path)
             
+            # Load the raw document data
             documents = loader.load()
-            # Split into chunks
+            
+            # Split the document into semantic chunks
             split_docs = self.text_splitter.split_documents(documents)
             
+            # Prepare vectors with preservation of important metadata
             vectors = []
             for i, doc in enumerate(split_docs):
                 embedding = self.embeddings.embed_query(doc.page_content)
@@ -108,13 +126,13 @@ class RAGService:
                     "id": vector_id,
                     "values": embedding,
                     "metadata": {
-                        "source": filename,
-                        "text": doc.page_content,
-                        **doc.metadata
+                        **doc.metadata, # Preserve original document metadata
+                        "source": filename, # Critical for document filtering
+                        "text": doc.page_content # The actual content for the LLM
                     }
                 })
             
-            # Upsert in batches
+            # Bulk upload to Pinecone
             self.index.upsert(vectors=vectors)
             print(f"Successfully added {filename}: {len(vectors)} chunks to Pinecone.")
             return True
@@ -122,52 +140,81 @@ class RAGService:
             print(f"Error processing document: {e}")
             return False
 
-    def generate_quiz(self, topic: str, num_questions: int = 5, difficulty: str = "Medium", input_type: str = "topic", language: str = "English", exam_sector: str = None, exam_name: str = None, subject: str = None):
-        """Generates a quiz based on the topic, relevant context, and specific language/exam/subject requirements."""
+    def generate_quiz(self, topic: str, num_questions: int = 5, difficulty: str = "Medium", 
+                      input_type: str = "topic", language: str = "English", 
+                      exam_sector: str = None, exam_name: str = None, subject: str = None):
+        """Core method to compile context and generate a high-quality quiz via OpenAI."""
         print(f"Generating quiz: Sector={exam_sector}, Exam={exam_name}, Subject={subject}, Language={language}, Difficulty={difficulty}")
         
         context_text = ""
         
-        # 1. Handle different input types
+        # --- PHASE 1: CONTEXT RETRIEVAL ---
+        
+        # Handle scraping for external links
         if input_type == "link":
             print(f"Scraping URL: {topic}")
             context_text = self._scrape_url(topic)
             if not context_text:
                 context_text = "Failed to scrape content from the link. Fallback to general knowledge."
         
+        # Use user-provided text directly
         elif input_type == "text":
             print("Using provided text directly as context.")
             context_text = topic
             topic = topic[:100] + "..." if len(topic) > 100 else topic
             
-        else: # Default: topic
+        # Retrieval from a specifically uploaded document
+        elif input_type == "document":
+            print(f"Retrieving specific context from document: {topic}")
             try:
-                # Manual search in Pinecone
-                query_embedding = self.embeddings.embed_query(topic)
+                # Target retrieval by filtering Pinecone metadata for the specific filename
+                query_embedding = self.embeddings.embed_query("Generate comprehensive quiz content and main concepts")
                 results = self.index.query(
                     vector=query_embedding,
-                    top_k=3,
+                    top_k=15, # High k to capture enough specific document info
+                    filter={"source": topic},
                     include_metadata=True
                 )
                 
-                context_chunks = []
-                for match in results['matches']:
-                    if 'text' in match['metadata']:
-                        context_chunks.append(match['metadata']['text'])
+                context_chunks = [match['metadata']['text'] for match in results['matches'] if 'text' in match['metadata']]
+                context_text = "\n\n".join(context_chunks)
+                print(f"Retrieved {len(context_chunks)} context chunks from {topic}")
                 
+                if not context_chunks:
+                    print(f"WARNING: No content found in Pinecone for source: {topic}.")
+                    
+            except Exception as e:
+                print(f"Error querying document context from Pinecone: {e}")
+                context_text = ""
+                
+        # General knowledge retrieval for a simple topic
+        else:
+            try:
+                # Semantic search across all indexed data for the topic keyword
+                query_embedding = self.embeddings.embed_query(topic)
+                results = self.index.query(
+                    vector=query_embedding,
+                    top_k=5,
+                    include_metadata=True
+                )
+                
+                context_chunks = [match['metadata']['text'] for match in results['matches'] if 'text' in match['metadata']]
                 context_text = "\n\n".join(context_chunks)
             except Exception as e:
                 print(f"Note: Pinecone search failed: {e}")
                 context_text = ""
 
+        # Default fallback if no context is found
         if not context_text:
             context_text = "No specific context found. Use your general knowledge."
 
-        # 2. Build the high-fidelity prompt
-        # Construct the target context string
+        # --- PHASE 2: PROMPT CONSTRUCT AND GENERATION ---
+
+        # Formatting detailed target info for the LLM
         target_info = f"Target Exam: {exam_name} ({exam_sector})" if exam_name else f"Target Sector: {exam_sector}"
         subject_info = f"Subject: {subject}" if subject else ""
         
+        # High-fidelity prompt designed for strictly formatted JSON output
         prompt_template = """
 You are an expert quiz generator specializing in Indian Government Examinations.
 Task: Generate {num_questions} unique and fresh {difficulty} level multiple-choice questions.
@@ -203,9 +250,10 @@ Return ONLY the JSON. No conversational text.
 """
         import time
         import random
+        # Create a dynamic seed to prevent repetitive LLM responses
         random_key = str(time.time())
         
-        # Inject random perspective to force variety
+        # Inject variety into the LLM's thought process
         perspectives = [
             "Focus on real-world application and case studies.",
             "Emphasize conceptual understanding and definitions.",
@@ -218,13 +266,8 @@ Return ONLY the JSON. No conversational text.
         ]
         selected_perspective = random.choice(perspectives)
 
+        # Build the chain and invoke the generation with dynamic variables
         prompt = PromptTemplate.from_template(prompt_template)
-        
-        # INCREASE TEMPERATURE FOR RANDOMNESS
-        # We override the default 0.7 to 0.9 for this specific call if possible, 
-        # or we can re-instantiate LLM. 
-        # Since we use self.llm (already init), we will rely on the prompt engineering.
-        
         chain = prompt | self.llm
         
         response_msg = chain.invoke({
@@ -244,47 +287,49 @@ Return ONLY the JSON. No conversational text.
         response = response_msg.content
         print(f"Raw LLM Response: {response}")
         
-        # Robust JSON extraction
+        # --- PHASE 3: JSON EXTRACTION & CLEANUP ---
         try:
+            # Extract JSON array from potentially messy LLM response
             json_search = re.search(r'\[.*\]', response, re.DOTALL)
             if json_search:
                 cleaned_response = json_search.group(0)
             else:
                 cleaned_response = response.strip()
             
+            # Validate JSON structure
             json.loads(cleaned_response)
             return cleaned_response
         except Exception as e:
             print(f"JSON parsing error: {e}")
             cleaned = response.strip()
+            # Clean possible markdown code block wrappers
             if cleaned.startswith("```json"): cleaned = cleaned[7:-3]
             elif cleaned.startswith("```"): cleaned = cleaned[3:-3]
             return cleaned.strip()
 
     def _scrape_url(self, url: str) -> str:
-        """Helper to extract text from a URL."""
+        """Helper to extract clean readable text from any web URL."""
         try:
+            # Emulate an actual browser request to avoid basic bot detection
             headers = {'User-Agent': 'Mozilla/5.0'}
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             
+            # Parse HTML content
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Remove script and style elements
+            # Scrub non-content tags like scripts and styles
             for script in soup(["script", "style"]):
                 script.decompose()
                 
-            # Get text
+            # Process and clean the text content
             text = soup.get_text()
-            
-            # Basic cleanup: break into lines and remove leading/trailing whitespace
             lines = (line.strip() for line in text.splitlines())
-            # break multi-headlines into a line each
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            # drop blank lines
-            text = '\n'.join(chunk for chunk in chunks if chunk)
+            clean_text = '\n'.join(chunk for chunk in chunks if chunk)
             
-            return text[:10000] # Limit context size for LLM
+            # Return a reasonable amount of context to fit LLM limits
+            return clean_text[:10000]
         except Exception as e:
             print(f"Scraping error: {e}")
             return ""
