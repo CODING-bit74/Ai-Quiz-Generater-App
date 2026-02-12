@@ -7,6 +7,9 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
+import '../models/history_model.dart';
+import '../services/database_service.dart';
+import 'history_controller.dart';
 
 class QuizController extends GetxController {
   // --- UI & ERROR STATE (GETX OBSERVABLES) ---
@@ -15,6 +18,8 @@ class QuizController extends GetxController {
   var isLoading = false.obs;
   // Holds any error message that needs to be displayed in the UI
   var errorMessage = RxnString();
+  // Dynamic message shown to the user during loading/processing
+  var loadingMessage = "CRAFTING YOUR QUIZ".obs;
 
   // --- CONFIGURATION & TARGET STATE ---
 
@@ -40,6 +45,9 @@ class QuizController extends GetxController {
   var difficulty = 'Medium'.obs;
   // Number of questions requested from the AI
   var numQuestions = 5.0.obs;
+  // Detected metadata from AI refinement
+  var detectedSubject = RxnString();
+  var detectedTopic = RxnString();
 
   // --- GAMEPLAY & SESSION STATE ---
 
@@ -251,12 +259,14 @@ class QuizController extends GetxController {
     }
 
     isLoading.value = true;
+    loadingMessage.value = "CRAFTING YOUR QUIZ";
     errorMessage.value = null;
     questions.clear();
     isQuizActive.value = false;
 
     // Step 2: Handle Background Indexing for Documents
     if (selectedType.value == 'Document') {
+      loadingMessage.value = "UPLOADING DOCUMENT...";
       if (pickedFilePath.value == null) {
         Get.snackbar('Error', 'Please select a document first!');
         isLoading.value = false;
@@ -267,6 +277,8 @@ class QuizController extends GetxController {
         isLoading.value = false;
         return;
       }
+    } else if (selectedType.value == 'Link' || selectedType.value == 'Text') {
+      loadingMessage.value = "STUDYING CONTENT...";
     }
 
     // Step 3: Trigger Generation API
@@ -281,6 +293,7 @@ class QuizController extends GetxController {
       }
 
       final url = Uri.parse('$baseUrl/generate_quiz');
+      loadingMessage.value = "GENERATING QUESTIONS...";
 
       // Send all configuration preferences to the backend
       final response = await http.post(
@@ -304,9 +317,14 @@ class QuizController extends GetxController {
 
       // Step 4: Parse and Transition
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        questions.assignAll(data);
-        if (data.isNotEmpty) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final List<dynamic> questionList = data['questions'] ?? [];
+
+        detectedSubject.value = data['detected_subject'];
+        detectedTopic.value = data['detected_topic'];
+
+        questions.assignAll(questionList);
+        if (questionList.isNotEmpty) {
           _showPlaygroundTransition();
         }
       } else {
@@ -407,6 +425,37 @@ class QuizController extends GetxController {
     _calculateScore();
     isQuizActive.value = false;
     isQuizFinished.value = true;
+    _saveResultToHistory();
+  }
+
+  /// Persists the session to SQLite for analytics
+  Future<void> _saveResultToHistory() async {
+    try {
+      final result = QuizResult(
+        topic: selectedType.value == 'Topic'
+            ? selectedTopic.value
+            : (detectedTopic.value ??
+                  (selectedType.value == 'Document'
+                      ? pickedFileName.value!
+                      : 'Manual Text')),
+        examName: selectedExam.value,
+        subject: selectedType.value == 'Topic'
+            ? selectedSubject.value
+            : (detectedSubject.value ?? selectedSubject.value),
+        score: score.value,
+        totalQuestions: questions.length,
+        date: DateTime.now(),
+        quizDataJson: jsonEncode(questions),
+      );
+      await DatabaseService.instance.insertResult(result);
+
+      // Refresh history if controller exists
+      if (Get.isRegistered<HistoryController>()) {
+        Get.find<HistoryController>().loadHistory();
+      }
+    } catch (e) {
+      debugPrint('Error saving history: $e');
+    }
   }
 
   /// Logic to count correct answers based on the LLM's 'answer' field and user selections.
@@ -452,5 +501,21 @@ class QuizController extends GetxController {
   void removeFile() {
     pickedFileName.value = null;
     pickedFilePath.value = null;
+  }
+
+  /// Initiates a re-challenge for a specific weak subject
+  void startReChallenge(String subject) {
+    setSubject(subject);
+    setType('Topic'); // Default to AI topic generation for re-challenge
+    generateQuiz();
+  }
+
+  /// Initiates a re-challenge for a specific historical topic
+  void startTopicReChallenge(String topic, String subject, String exam) {
+    setType('Topic');
+    selectedTopic.value = topic;
+    setSubject(subject);
+    setExam(exam);
+    generateQuiz();
   }
 }
