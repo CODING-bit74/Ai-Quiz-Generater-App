@@ -11,8 +11,8 @@ class QuizScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Inject or find the singleton instance of QuizController
-    final QuizController controller = Get.put(QuizController());
+    // Find the global singleton instance of QuizController
+    final QuizController controller = Get.find<QuizController>();
 
     // Local variable to track dark mode for manual UI adjustments
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -128,13 +128,15 @@ class QuizScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              Text(
-                "CRAFTING YOUR QUIZ",
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 3,
+              Obx(
+                () => Text(
+                  controller.loadingMessage.value,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 3,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -437,243 +439,209 @@ class QuizScreen extends StatelessWidget {
           ),
           const SizedBox(height: 32),
 
-          // 3. TARGET EXAM SETTINGS (Only for Topic-based search)
-          Obx(
-            () => controller.selectedType.value != 'Document'
-                ? _buildGlassCard(
-                    context,
-                    title: "Target Configuration",
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Dynamic heading based on mode
-                        Obx(
-                          () => Text(
-                            controller.selectedType.value == 'Topic'
-                                ? "Exam Sector"
-                                : "Target Pattern",
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Scrollable sector chips
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: controller.examSectors.keys.map((sector) {
-                              return Obx(() {
-                                bool isSelected =
-                                    controller.selectedSector.value == sector;
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: ChoiceChip(
-                                    label: Text(sector),
-                                    selected: isSelected,
-                                    onSelected: (val) {
-                                      if (val) controller.setSector(sector);
-                                    },
-                                    backgroundColor: isDark
-                                        ? Colors.white.withOpacity(0.05)
-                                        : Colors.black.withOpacity(0.05),
-                                    selectedColor: Colors.blue[700],
-                                    labelStyle: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withOpacity(0.6),
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                      fontSize: 12,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                      side: BorderSide(
-                                        color: isSelected
-                                            ? Colors.blue
-                                            : Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withOpacity(0.1),
-                                      ),
-                                    ),
-                                    showCheckmark: false,
-                                  ),
-                                );
-                              });
-                            }).toList(),
-                          ),
-                        ),
-                        // Specific Exam Dropdown
-                        Obx(
-                          () => controller.selectedType.value == 'Topic'
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 20),
-                                    Text(
-                                      "Specific Exam",
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withOpacity(0.6),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? Colors.black26
-                                            : Colors.white.withOpacity(0.5),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withOpacity(0.1),
-                                        ),
-                                      ),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<String>(
-                                          value: controller.selectedExam.value,
-                                          isExpanded: true,
-                                          dropdownColor: Theme.of(
-                                            context,
-                                          ).cardColor,
-                                          icon: const Icon(
-                                            Icons.keyboard_arrow_down,
-                                            color: Colors.blue,
-                                          ),
-                                          style: TextStyle(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                          items: controller
-                                              .examSectors[controller
-                                                  .selectedSector
-                                                  .value]!
-                                              .map((exam) {
-                                                return DropdownMenuItem(
-                                                  value: exam,
-                                                  child: Text(exam),
-                                                );
-                                              })
-                                              .toList(),
-                                          onChanged: (val) =>
-                                              controller.setExam(val!),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                        // Subject Selection
-                        Obx(
-                          () => controller.selectedType.value == 'Topic'
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 20),
-                                    Text(
-                                      "Subject Focus",
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withOpacity(0.6),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        children: controller.subjects.map((
-                                          subject,
-                                        ) {
-                                          return Obx(() {
-                                            bool isSelected =
-                                                controller
-                                                    .selectedSubject
-                                                    .value ==
-                                                subject;
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                right: 8,
-                                              ),
-                                              child: ChoiceChip(
-                                                label: Text(subject),
-                                                selected: isSelected,
-                                                onSelected: (val) {
-                                                  if (val)
-                                                    controller.setSubject(
-                                                      subject,
-                                                    );
-                                                },
-                                                backgroundColor: isDark
-                                                    ? Colors.white.withOpacity(
-                                                        0.05,
-                                                      )
-                                                    : Colors.black.withOpacity(
-                                                        0.05,
-                                                      ),
-                                                selectedColor:
-                                                    Colors.purple[700],
-                                                labelStyle: TextStyle(
-                                                  color: isSelected
-                                                      ? Colors.white
-                                                      : Theme.of(context)
-                                                            .colorScheme
-                                                            .onSurface
-                                                            .withOpacity(0.6),
-                                                  fontWeight: isSelected
-                                                      ? FontWeight.bold
-                                                      : FontWeight.normal,
-                                                  fontSize: 12,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  side: BorderSide(
-                                                    color: isSelected
-                                                        ? Colors.purple
-                                                        : Theme.of(context)
-                                                              .colorScheme
-                                                              .onSurface
-                                                              .withOpacity(0.1),
-                                                  ),
-                                                ),
-                                                showCheckmark: false,
-                                              ),
-                                            );
-                                          });
-                                        }).toList(),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                      ],
+          // 3. TARGET EXAM SETTINGS (Enabled for all modes)
+          _buildGlassCard(
+            context,
+            title: "Target Configuration",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dynamic heading based on mode
+                Obx(
+                  () => Text(
+                    controller.selectedType.value == 'Topic'
+                        ? "Exam Sector"
+                        : "Target Pattern",
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
-                  )
-                : const SizedBox.shrink(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Scrollable sector chips
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: controller.examSectors.keys.map((sector) {
+                      return Obx(() {
+                        bool isSelected =
+                            controller.selectedSector.value == sector;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(sector),
+                            selected: isSelected,
+                            onSelected: (val) {
+                              if (val) controller.setSector(sector);
+                            },
+                            backgroundColor: isDark
+                                ? Colors.white.withOpacity(0.05)
+                                : Colors.black.withOpacity(0.05),
+                            selectedColor: Colors.blue[700],
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.6),
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              fontSize: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(
+                                color: isSelected
+                                    ? Colors.blue
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.1),
+                              ),
+                            ),
+                            showCheckmark: false,
+                          ),
+                        );
+                      });
+                    }).toList(),
+                  ),
+                ),
+                // Specific Exam Dropdown
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    Text(
+                      "Specific Exam",
+                      style: TextStyle(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.black26
+                            : Colors.white.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.1),
+                        ),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: controller.selectedExam.value,
+                          isExpanded: true,
+                          dropdownColor: Theme.of(context).cardColor,
+                          icon: const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Colors.blue,
+                          ),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          items: controller
+                              .examSectors[controller.selectedSector.value]!
+                              .map((exam) {
+                                return DropdownMenuItem(
+                                  value: exam,
+                                  child: Text(exam),
+                                );
+                              })
+                              .toList(),
+                          onChanged: (val) => controller.setExam(val!),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                // Subject Selection (Only for Topic-based search)
+                Obx(
+                  () => controller.selectedType.value == 'Topic'
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 20),
+                            Text(
+                              "Subject Focus",
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: controller.subjects.map((subject) {
+                                  return Obx(() {
+                                    bool isSelected =
+                                        controller.selectedSubject.value ==
+                                        subject;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: ChoiceChip(
+                                        label: Text(subject),
+                                        selected: isSelected,
+                                        onSelected: (val) {
+                                          if (val)
+                                            controller.setSubject(subject);
+                                        },
+                                        backgroundColor: isDark
+                                            ? Colors.white.withOpacity(0.05)
+                                            : Colors.black.withOpacity(0.05),
+                                        selectedColor: Colors.purple[700],
+                                        labelStyle: TextStyle(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withOpacity(0.6),
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                          fontSize: 12,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          side: BorderSide(
+                                            color: isSelected
+                                                ? Colors.purple
+                                                : Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withOpacity(0.1),
+                                          ),
+                                        ),
+                                        showCheckmark: false,
+                                      ),
+                                    );
+                                  });
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
           ),
 
           // 4. CONTENT SOURCE (Topic Dropdown or Text Field)

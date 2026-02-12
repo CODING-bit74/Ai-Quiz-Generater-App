@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:test_project/welcome_screen.dart';
 import 'controllers/theme_controller.dart';
+import 'controllers/history_controller.dart';
+import 'controllers/quiz_controller.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,6 +17,10 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       initialBinding: BindingsBuilder(() {
         Get.put(ThemeController());
+        Get.put(HistoryController());
+        Get.put(
+          QuizController(),
+        ); // Also making QuizController global for easy access
       }),
       title: 'AI Quiz Generator',
       debugShowCheckedModeBanner: false,

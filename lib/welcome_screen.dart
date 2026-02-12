@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:test_project/quiz_screen.dart';
+import 'package:test_project/performance_lab_screen.dart';
 import 'controllers/theme_controller.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -325,6 +326,28 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               ),
                             ),
                           ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Performance Lab Secondary CTA
+                      TextButton.icon(
+                        onPressed: () =>
+                            Get.to(() => const PerformanceLabScreen()),
+                        icon: const Icon(Icons.analytics_rounded, size: 18),
+                        label: const Text(
+                          "VIEW PERFORMANCE VAULT",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: isDark
+                              ? Colors.white38
+                              : Colors.black38,
                         ),
                       ),
 

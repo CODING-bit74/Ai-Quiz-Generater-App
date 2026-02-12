@@ -76,6 +76,16 @@ class RAGService:
         # Configure the text splitter for document indexing
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
 
+    def _upsert_batches(self, vectors: list, batch_size: int = 50):
+        """Helper to upload vectors in batches to avoid Pinecone's request size limit (2MB)."""
+        if not vectors:
+            return
+        total_batches = (len(vectors) - 1) // batch_size + 1
+        for i in range(0, len(vectors), batch_size):
+            batch = vectors[i:i + batch_size]
+            print(f"Upserting batch {i//batch_size + 1}/{total_batches} ({len(batch)} vectors)...")
+            self.index.upsert(vectors=batch)
+
     def add_text_to_knowledge_base(self, text: str, metadata: dict = None):
         """Adds raw text strings to the Pinecone vector database."""
         try:
@@ -93,8 +103,8 @@ class RAGService:
                     "metadata": {**(metadata or {}), "text": chunk}
                 })
             
-            # Step 3: Upload the vectors to Pinecone
-            self.index.upsert(vectors=vectors)
+            # Step 3: Upload the vectors to Pinecone using batching
+            self._upsert_batches(vectors)
             print(f"Added context: {text[:50]}... ({len(vectors)} chunks) to Pinecone")
             return True
         except Exception as e:
@@ -132,8 +142,8 @@ class RAGService:
                     }
                 })
             
-            # Bulk upload to Pinecone
-            self.index.upsert(vectors=vectors)
+            # Bulk upload to Pinecone using batching
+            self._upsert_batches(vectors)
             print(f"Successfully added {filename}: {len(vectors)} chunks to Pinecone.")
             return True
         except Exception as e:
@@ -147,45 +157,38 @@ class RAGService:
         print(f"Generating quiz: Sector={exam_sector}, Exam={exam_name}, Subject={subject}, Language={language}, Difficulty={difficulty}")
         
         context_text = ""
+        # Reset metadata for each generation session
+        self._last_detected_subject = None
+        self._last_detected_topic = None
         
         # --- PHASE 1: CONTEXT RETRIEVAL ---
         
         # Handle scraping for external links
         if input_type == "link":
             print(f"Scraping URL: {topic}")
-            context_text = self._scrape_url(topic)
-            if not context_text:
-                context_text = "Failed to scrape content from the link. Fallback to general knowledge."
+            raw_scraped = self._scrape_url(topic)
+            if not raw_scraped:
+                context_text = "Failed to scrape content. Fallback to general knowledge."
+            else:
+                # STAGE 1: Refinement (Study the content first)
+                print("Refining scraped content for factual precision...")
+                context_text = self._refine_context(raw_scraped, topic)
         
         # Use user-provided text directly
         elif input_type == "text":
-            print("Using provided text directly as context.")
-            context_text = topic
+            print("Refining user text for factual precision & metadata...")
+            context_text = self._refine_context(topic, "User Provided Text")
             topic = topic[:100] + "..." if len(topic) > 100 else topic
             
         # Retrieval from a specifically uploaded document
         elif input_type == "document":
             print(f"Retrieving specific context from document: {topic}")
-            try:
-                # Target retrieval by filtering Pinecone metadata for the specific filename
-                query_embedding = self.embeddings.embed_query("Generate comprehensive quiz content and main concepts")
-                results = self.index.query(
-                    vector=query_embedding,
-                    top_k=15, # High k to capture enough specific document info
-                    filter={"source": topic},
-                    include_metadata=True
-                )
-                
-                context_chunks = [match['metadata']['text'] for match in results['matches'] if 'text' in match['metadata']]
-                context_text = "\n\n".join(context_chunks)
-                print(f"Retrieved {len(context_chunks)} context chunks from {topic}")
-                
-                if not context_chunks:
-                    print(f"WARNING: No content found in Pinecone for source: {topic}.")
-                    
-            except Exception as e:
-                print(f"Error querying document context from Pinecone: {e}")
-                context_text = ""
+            raw_context = self._retrieve_context(topic, "Generate comprehensive quiz content and main concepts")
+            if raw_context:
+                print("Refining document context for factual precision & metadata...")
+                context_text = self._refine_context(raw_context, topic)
+            else:
+                context_text = "No specific context found in document. Use general knowledge."
                 
         # General knowledge retrieval for a simple topic
         else:
@@ -214,39 +217,52 @@ class RAGService:
         target_info = f"Target Exam: {exam_name} ({exam_sector})" if exam_name else f"Target Sector: {exam_sector}"
         subject_info = f"Subject: {subject}" if subject else ""
         
+        # --- PHASE 2: EXAM-SPECIFIC DIFFICULTY PERSONAS ---
+        difficulty_mapping = {
+            "Easy": "Persona: SSC/Railway Junior Level. Focus on direct factual recall. Single-sentence questions. Direct answers. Memory-based.",
+            "Medium": "Persona: Banking/Central Govt Group B. Focus on analytical patterns, logical comparisons, and slightly deeper factual nuance.",
+            "Hard": "Persona: UPSC/State PSC/NET. Focus on multi-statement reasoning, 'Assertion-Reasoning', and 'Which of the following are correct' style questions. High complexity."
+        }
+        selected_persona = difficulty_mapping.get(difficulty, difficulty_mapping["Medium"])
+
         # High-fidelity prompt designed for strictly formatted JSON output
         prompt_template = """
-You are an expert quiz generator specializing in Indian Government Examinations.
-Task: Generate {num_questions} unique and fresh {difficulty} level multiple-choice questions.
-Target: {target_info}
-{subject_info}
-Topic Area: "{topic}"
+You are the **Ultimate AI Quiz Professor** for Indian Government Competitive Exams.
+Your goal is to help students CRACK their exams by providing highly accurate, challenging, and educational content.
 
-Randomization Seed: {random_key}
-Generation Perspective: {perspective}
-Requirement: Ensure the questions are completely different from common sets. AVoid repeating questions from previous sessions.
+TASK: Generate {num_questions} "{difficulty}" level MCQs.
+EXAM TARGET: {target_info}
+SUBJECT: {subject_name}
+TOPIC: "{topic}"
 
-Context for Questions:
+STUDENT PERSONA: {persona}
+
+CORE MATERIAL (The "Truth" for this quiz):
 {context}
 
-Requirements:
-1. Factually accurate and strictly relevant to the {subject_name}.
-2. Adhere to the question pattern, standard, and difficulty level of {exam_context} examinations.
-3. Every question must have exactly 4 options.
-4. Provide a clear, concise explanation.
-5. Generate ALL output (questions, options, answer, and explanation) strictly in {language} language.
+STRICT QUALITY REQUIREMENTS:
+1. FACTUAL SUPREMACY: Questions must be derived from the Core Material. No hallucinations.
+2. SMART DISTRACTORS: Options should be tricky but logically distinct. No 'All of the above' unless absolutely necessary.
+3. EDUCATIONAL EXPLANATIONS:
+   - Start with WHY the answer is correct.
+   - Mention a 'Pro-Tip' or 'Memory Trick' to help the student remember this.
+   - For Hard questions, explain the subtle nuances that make the distractors incorrect.
+4. EXAM NUANCE: If difficulty is 'Hard', use UPSC-style Statement reasoning (I, II, III).
+5. NO REPETITION: Ensure unique questions.
 
-Output Format (STRICT JSON list of objects):
+Language: {language}
+
+Output STrictly as a JSON array:
 [
     {{
-        "question": "Question text in {language}",
+        "question": "Clear, specific, and exam-relevant question",
         "options": ["Option A", "Option B", "Option C", "Option D"],
-        "answer": "Correct Option Text",
-        "explanation": "Brief explanation in {language}"
+        "answer": "Exact correct option text",
+        "explanation": "Detailed breakdown + Pro-Tip for students."
     }}
 ]
 
-Return ONLY the JSON. No conversational text.
+Return ONLY the JSON. No markdown wrappers.
 """
         import time
         import random
@@ -277,11 +293,8 @@ Return ONLY the JSON. No conversational text.
             "difficulty": difficulty,
             "language": language,
             "target_info": target_info,
-            "subject_info": subject_info,
             "subject_name": subject if subject else topic,
-            "exam_context": exam_name if exam_name else exam_sector,
-            "random_key": f"{random_key}-{selected_perspective}", # Combine for stronger seed effect
-            "perspective": selected_perspective
+            "persona": selected_persona
         })
         
         response = response_msg.content
@@ -292,44 +305,148 @@ Return ONLY the JSON. No conversational text.
             # Extract JSON array from potentially messy LLM response
             json_search = re.search(r'\[.*\]', response, re.DOTALL)
             if json_search:
-                cleaned_response = json_search.group(0)
+                cleaned_questions = json.loads(json_search.group(0))
             else:
-                cleaned_response = response.strip()
+                cleaned_questions = json.loads(response.strip())
             
-            # Validate JSON structure
-            json.loads(cleaned_response)
-            return cleaned_response
+            # Return questions along with detected metadata
+            return json.dumps({
+                "questions": cleaned_questions,
+                "detected_subject": getattr(self, '_last_detected_subject', None),
+                "detected_topic": getattr(self, '_last_detected_topic', None)
+            })
         except Exception as e:
-            print(f"JSON parsing error: {e}")
-            cleaned = response.strip()
-            # Clean possible markdown code block wrappers
-            if cleaned.startswith("```json"): cleaned = cleaned[7:-3]
-            elif cleaned.startswith("```"): cleaned = cleaned[3:-3]
-            return cleaned.strip()
+            print(f"JSON parsing error in generation: {e}")
+            return json.dumps({
+                "questions": [],
+                "error": str(e)
+            })
+
+    def _refine_context(self, raw_text: str, source: str) -> str:
+        """STAGE 1: Uses the LLM to study the raw text and extract core factual context + metadata."""
+        refinement_prompt = """
+You are an expert Educator. Study the provided raw content from "{source}".
+Perform three tasks:
+1. Extract a clean, bulleted Factual Summary of core data points, dates, and definitions relevant for Indian Exams.
+2. Categorize this content into exactly one of these SUBJECTS:
+   - 'Quant': Mathematics, Arithmetic, Algebra, Geometry, Data Interpretation.
+   - 'Reasoning': Logic, Puzzles, Coding-Decoding, Syllogisms.
+   - 'English': Grammar, Comprehension, Vocabulary, Vocabulary, Sentence Correction.
+   - 'GA/GS': History, Geography, Polity, Science, Current Affairs, Static GK, Economics.
+3. Generate a concise, human-readable TOPIC TITLE (e.g., "The Mughal Empire", "Ratio & Proportion Concepts").
+
+Raw Content:
+{content}
+
+Output format (STRICT JSON):
+{{
+  "summary": "The factual summary text...",
+  "subject": "Exactly one of the 4 allowed subjects",
+  "topic": "The concise topic title"
+}}
+
+Return ONLY the JSON. No conversational text.
+"""
+        import re
+        try:
+            prompt = PromptTemplate.from_template(refinement_prompt)
+            chain = prompt | self.llm
+            response_msg = chain.invoke({"content": raw_text[:8000], "source": source})
+            response = response_msg.content
+            
+            # Use regex to find JSON block in case LLM wraps it in markdown ```json ... ```
+            json_search = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_search:
+                data = json.loads(json_search.group(0))
+            else:
+                data = json.loads(response.strip())
+            
+            # Map detected subject to the strict allowed set
+            subject = data.get('subject', 'GA/GS')
+            # Normalize common subject variations
+            subject_map = {
+                'Math': 'Quant', 'Mathematics': 'Quant', 'Arithmetic': 'Quant',
+                'Logical': 'Reasoning', 'Logical Reasoning': 'Reasoning',
+                'General Awareness': 'GA/GS', 'General Studies': 'GA/GS', 'GK': 'GA/GS', 'History': 'GA/GS',
+                'English Language': 'English'
+            }
+            final_subject = subject_map.get(subject, subject)
+            if final_subject not in ['Quant', 'Reasoning', 'English', 'GA/GS']:
+                final_subject = "GA/GS"
+            
+            self._last_detected_subject = final_subject
+            self._last_detected_topic = data.get('topic', 'Manual Content')
+            
+            return data.get('summary', raw_text[:4000])
+        except Exception as e:
+            print(f"Refinement error: {e}")
+            self._last_detected_subject = "GA/GS"
+            self._last_detected_topic = "Manual Content"
+            return raw_text[:4000]
+
+    def _retrieve_context(self, source_name: str, query: str) -> str:
+        """Helper to query Pinecone for specific source context."""
+        try:
+            query_embedding = self.embeddings.embed_query(query)
+            results = self.index.query(
+                vector=query_embedding,
+                top_k=20, # Higher k for a better "study" pool
+                filter={"source": source_name},
+                include_metadata=True
+            )
+            context_chunks = [match['metadata']['text'] for match in results['matches'] if 'text' in match['metadata']]
+            return "\n\n".join(context_chunks)
+        except Exception as e:
+            print(f"Retrieval error for {source_name}: {e}")
+            return ""
 
     def _scrape_url(self, url: str) -> str:
-        """Helper to extract clean readable text from any web URL."""
+        """Specialized student-centric web scraper with domain handlers."""
         try:
-            # Emulate an actual browser request to avoid basic bot detection
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(url, headers=headers, timeout=10)
+            # Emulate a high-reputation browser
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            }
+            response = requests.get(url, headers=headers, timeout=15)
             response.raise_for_status()
             
-            # Parse HTML content
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Scrub non-content tags like scripts and styles
-            for script in soup(["script", "style"]):
-                script.decompose()
-                
-            # Process and clean the text content
-            text = soup.get_text()
-            lines = (line.strip() for line in text.splitlines())
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            clean_text = '\n'.join(chunk for chunk in chunks if chunk)
+            # --- Domain-Specific Handling (Heuristic) ---
+            # If it's an educational blog, focus on the article content container
+            edu_patterns = ['gktoday', 'testbook', 'byjus', 'jagranjosh', 'studyiq', 'unacademy']
+            is_edu_site = any(p in url.lower() for p in edu_patterns)
+
+            # Noise reduction
+            for tag in soup(["script", "style", "nav", "footer", "header", "aside", "form", "iframe", "noscript", "button"]):
+                tag.decompose()
             
-            # Return a reasonable amount of context to fit LLM limits
-            return clean_text[:10000]
+            # Smart targeting
+            if is_edu_site:
+                # Most Indian EDU sites use 'article' or specific entry-content classes
+                content = soup.find('article') or soup.find('div', class_=re.compile(r'content|post|entry|main', re.I))
+            else:
+                content = soup.find('main') or soup.find('article') or soup.body
+
+            if not content:
+                content = soup
+
+            # Extraction with semantic spacing
+            text = content.get_text(separator=' | ')
+            
+            # Post-processing: Remove typical noise sequences
+            lines = []
+            for line in text.splitlines():
+                l = line.strip()
+                # Skip tiny crumbs, social prompts, or typical 'Read More' fluff
+                if len(l) > 25 and not any(noise in l.lower() for noise in ['subscribe', 'share this', 'follow us', 'rights reserved']):
+                    lines.append(l)
+            
+            clean_text = '\n'.join(lines)
+            print(f"Scraped {len(clean_text)} study characters from {url}")
+            return clean_text[:15000]
+            
         except Exception as e:
             print(f"Scraping error: {e}")
             return ""
