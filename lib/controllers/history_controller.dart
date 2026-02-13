@@ -6,6 +6,19 @@ class HistoryController extends GetxController {
   var history = <QuizResult>[].obs;
   var isLoading = false.obs;
 
+  // User Profile Stats
+  var credits = 150.obs;
+
+  void deductCredits(int amount) {
+    if (credits.value >= amount) {
+      credits.value -= amount;
+    }
+  }
+
+  void addCredits(int amount) {
+    credits.value += amount;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -69,5 +82,54 @@ class HistoryController extends GetxController {
       mastery[subject] = scores.reduce((a, b) => a + b) / scores.length;
     });
     return mastery;
+  }
+
+  // Rank Logic
+  String get currentRank {
+    int count = history.length;
+    if (count > 50) return "LEGEND";
+    if (count > 30) return "MASTER";
+    if (count > 15) return "COMMANDER";
+    if (count > 5) return "OFFICER";
+    return "GOVPrpeAi";
+  }
+
+  String get nextRankTitle {
+    int count = history.length;
+    if (count > 50) return "MAX RANK";
+    if (count > 30) return "LEGEND";
+    if (count > 15) return "MASTER";
+    if (count > 5) return "COMMANDER";
+    return "OFFICER";
+  }
+
+  int get missionsToNextRank {
+    int count = history.length;
+    if (count > 50) return 0;
+    if (count > 30) return 51 - count;
+    if (count > 15) return 31 - count;
+    if (count > 5) return 16 - count;
+    return 6 - count;
+  }
+
+  double get rankProgress {
+    int count = history.length;
+    if (count > 50) return 1.0;
+
+    int lowerBound = 0;
+    int upperBound = 6;
+
+    if (count > 30) {
+      lowerBound = 30;
+      upperBound = 51;
+    } else if (count > 15) {
+      lowerBound = 15;
+      upperBound = 31;
+    } else if (count > 5) {
+      lowerBound = 5;
+      upperBound = 16;
+    }
+
+    return (count - lowerBound) / (upperBound - lowerBound);
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // Business logic and state management controller
 import 'controllers/quiz_controller.dart';
+import 'controllers/history_controller.dart';
 // Custom painter for the results celebration effect
 import 'painters/confetti_painter.dart';
 
@@ -115,44 +116,7 @@ class QuizScreen extends StatelessWidget {
     return Obx(() {
       // 1. Initial generation loading state
       if (controller.isLoading.value && controller.questions.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(
-                width: 40,
-                height: 40,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Obx(
-                () => Text(
-                  controller.loadingMessage.value,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 3,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "Applying SSC, Banking & UPSC Exam Standards",
-                style: TextStyle(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.7),
-                  fontSize: 13,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-        );
+        return const AILoadingView();
       }
 
       // 2. Playground transition state
@@ -175,9 +139,82 @@ class QuizScreen extends StatelessWidget {
         return _buildResultsView(context, controller);
       }
 
-      // 6. Default: Selection and configuration UI
-      return _buildConfigurationView(context, controller);
+      // 6. Error State
+      if (controller.errorMessage.value != null) {
+        return _buildErrorView(context, controller);
+      }
+
+      // 7. Default fallback / Empty State
+      return _buildErrorView(
+        context,
+        controller,
+        customMessage: "Ready to Start",
+        showStartButton: false,
+      );
     });
+  }
+
+  Widget _buildErrorView(
+    BuildContext context,
+    QuizController controller, {
+    String? customMessage,
+    bool showStartButton = true,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: Colors.redAccent.withOpacity(0.8),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              "Ops!",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              customMessage ??
+                  controller.errorMessage.value ??
+                  "Unknown error occurred.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            if (showStartButton)
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_rounded),
+                label: const Text("GO BACK"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Renders a visually immersive loading experience
@@ -310,612 +347,6 @@ class QuizScreen extends StatelessWidget {
         // Blurs underlying content for a frosted glass orb effect
         filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
         child: Container(),
-      ),
-    );
-  }
-
-  /// Main configuration layout for setting up the quiz
-  Widget _buildConfigurationView(
-    BuildContext context,
-    QuizController controller,
-  ) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return SingleChildScrollView(
-      // Padding for better touch safety at bottom
-      padding: const EdgeInsets.fromLTRB(24, 10, 24, 100),
-      child: Column(
-        children: [
-          // 1. BRANDING & HEADER
-          Center(
-            child: Column(
-              children: [
-                // Avatar container with premium glow
-                Container(
-                  height: 100,
-                  width: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withOpacity(0.5),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.2),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(50),
-                    child: Image.asset(
-                      'assets/images/quiz_agent.jpg',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'MASTER LAB',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                Text(
-                  'Configure your perfect exam session',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // 2. INPUT METHOD NAV BAR (Glassmorphic)
-          Center(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              // iOS-style bouncing feel
-              physics: const BouncingScrollPhysics(),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.03)
-                      : Colors.black.withOpacity(0.03),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.black.withOpacity(0.08),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildTypeTab(
-                      context,
-                      controller,
-                      'Topic',
-                      Icons.psychology_rounded,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildTypeTab(
-                      context,
-                      controller,
-                      'Link',
-                      Icons.auto_fix_high_rounded,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildTypeTab(
-                      context,
-                      controller,
-                      'Text',
-                      Icons.smart_toy_rounded,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildTypeTab(
-                      context,
-                      controller,
-                      'Document',
-                      Icons.memory_rounded,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // 3. TARGET EXAM SETTINGS (Enabled for all modes)
-          _buildGlassCard(
-            context,
-            title: "Target Configuration",
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Dynamic heading based on mode
-                Obx(
-                  () => Text(
-                    controller.selectedType.value == 'Topic'
-                        ? "Exam Sector"
-                        : "Target Pattern",
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Scrollable sector chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: controller.examSectors.keys.map((sector) {
-                      return Obx(() {
-                        bool isSelected =
-                            controller.selectedSector.value == sector;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(sector),
-                            selected: isSelected,
-                            onSelected: (val) {
-                              if (val) controller.setSector(sector);
-                            },
-                            backgroundColor: isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.05),
-                            selectedColor: Colors.blue[700],
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withOpacity(0.6),
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? Colors.blue
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withOpacity(0.1),
-                              ),
-                            ),
-                            showCheckmark: false,
-                          ),
-                        );
-                      });
-                    }).toList(),
-                  ),
-                ),
-                // Specific Exam Dropdown
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-                    Text(
-                      "Specific Exam",
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.black26
-                            : Colors.white.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.1),
-                        ),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: controller.selectedExam.value,
-                          isExpanded: true,
-                          dropdownColor: Theme.of(context).cardColor,
-                          icon: const Icon(
-                            Icons.keyboard_arrow_down,
-                            color: Colors.blue,
-                          ),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          items: controller
-                              .examSectors[controller.selectedSector.value]!
-                              .map((exam) {
-                                return DropdownMenuItem(
-                                  value: exam,
-                                  child: Text(exam),
-                                );
-                              })
-                              .toList(),
-                          onChanged: (val) => controller.setExam(val!),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                // Subject Selection (Only for Topic-based search)
-                Obx(
-                  () => controller.selectedType.value == 'Topic'
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 20),
-                            Text(
-                              "Subject Focus",
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: controller.subjects.map((subject) {
-                                  return Obx(() {
-                                    bool isSelected =
-                                        controller.selectedSubject.value ==
-                                        subject;
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: ChoiceChip(
-                                        label: Text(subject),
-                                        selected: isSelected,
-                                        onSelected: (val) {
-                                          if (val)
-                                            controller.setSubject(subject);
-                                        },
-                                        backgroundColor: isDark
-                                            ? Colors.white.withOpacity(0.05)
-                                            : Colors.black.withOpacity(0.05),
-                                        selectedColor: Colors.purple[700],
-                                        labelStyle: TextStyle(
-                                          color: isSelected
-                                              ? Colors.white
-                                              : Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withOpacity(0.6),
-                                          fontWeight: isSelected
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                          fontSize: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          side: BorderSide(
-                                            color: isSelected
-                                                ? Colors.purple
-                                                : Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface
-                                                      .withOpacity(0.1),
-                                          ),
-                                        ),
-                                        showCheckmark: false,
-                                      ),
-                                    );
-                                  });
-                                }).toList(),
-                              ),
-                            ),
-                          ],
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ],
-            ),
-          ),
-
-          // 4. CONTENT SOURCE (Topic Dropdown or Text Field)
-          Obx(
-            () => _buildGlassCard(
-              context,
-              title: controller.selectedType.value == 'Topic'
-                  ? "Topic Selection"
-                  : (controller.selectedType.value == 'Document'
-                        ? "Book / Notes Selection"
-                        : "Reference Material"),
-              child: controller.selectedType.value == 'Topic'
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Detailed Topic",
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.black26
-                                : Colors.white.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withOpacity(0.1),
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: controller.selectedTopic.value,
-                              isExpanded: true,
-                              dropdownColor: Theme.of(context).cardColor,
-                              icon: const Icon(
-                                Icons.category_rounded,
-                                color: Colors.blue,
-                              ),
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              items: controller
-                                  .subjectTopics[controller
-                                      .selectedSubject
-                                      .value]!
-                                  .map((topic) {
-                                    return DropdownMenuItem(
-                                      value: topic,
-                                      child: Text(topic),
-                                    );
-                                  })
-                                  .toList(),
-                              onChanged: (val) => controller.setTopic(val!),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : (controller.selectedType.value == 'Document'
-                        ? _buildDocumentSourceCard(context, controller)
-                        : TextField(
-                            controller: controller.inputController,
-                            maxLines: 5,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 14,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: controller.selectedType.value == 'Link'
-                                  ? "Paste URL here (e.g., https://...)"
-                                  : "Paste your study notes or text here...",
-                              hintStyle: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.3),
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          )),
-            ),
-          ),
-          Obx(
-            () => controller.selectedType.value == 'Document'
-                ? const SizedBox.shrink()
-                : const SizedBox(height: 24),
-          ),
-
-          // 5. SESSION PREFERENCES
-          _buildGlassCard(
-            context,
-            title: "Session Preferences",
-            child: Column(
-              children: [
-                // Language Dropdown
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Language",
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.black26
-                            : Colors.white.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.1),
-                        ),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: Obx(
-                          () => DropdownButton<String>(
-                            value: controller.selectedLanguage.value,
-                            isExpanded: true,
-                            dropdownColor: Theme.of(context).cardColor,
-                            icon: const Icon(
-                              Icons.language,
-                              color: Colors.blue,
-                            ),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            items: controller.languages
-                                .map(
-                                  (l) => DropdownMenuItem(
-                                    value: l,
-                                    child: Text(l),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (val) => controller.setLanguage(val!),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 5b. DIFFICULTY LEVEL SELECTOR
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Difficulty",
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: ['Easy', 'Medium', 'Hard']
-                          .map(
-                            (level) => Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4.0,
-                                ),
-                                child: _buildDifficultyChip(
-                                  context,
-                                  controller,
-                                  level,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 5c. QUESTION COUNT ADJUSTER
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Question Count",
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.6),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        // Real-time value display
-                        Obx(
-                          () => Text(
-                            "${controller.numQuestions.value.toInt()}",
-                            style: const TextStyle(
-                              color: Colors.blueAccent,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Obx(
-                      () => Slider(
-                        value: controller.numQuestions.value,
-                        min: 5,
-                        max: 20,
-                        divisions: 3, // Steps: 5, 10, 15, 20
-                        activeColor: Colors.blue,
-                        inactiveColor: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.1),
-                        onChanged: (val) => controller.setNumQuestions(val),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 48),
-
-          // 6. PRIMARY ACTION: GENERATE
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: controller.generateQuiz,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shadowColor: Colors.blue.withOpacity(0.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: const Text(
-                'GENERATE QUIZ',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1096,6 +527,12 @@ class QuizScreen extends StatelessWidget {
     final total = controller.questions.length;
     final wrong = total - correct;
 
+    // Get HistoryController for Rank Logic
+    final HistoryController historyController =
+        Get.isRegistered<HistoryController>()
+        ? Get.find<HistoryController>()
+        : Get.put(HistoryController());
+
     // Visual theme selection based on performance
     String performanceMessage;
     IconData performanceIcon;
@@ -1114,7 +551,7 @@ class QuizScreen extends StatelessWidget {
       performanceIcon = Icons.thumb_up;
       gradientColors = [const Color(0xFF60A5FA), const Color(0xFF3B82F6)];
     } else {
-      performanceMessage = "KEEP LEARNING";
+      performanceMessage = "TRAINING NEEDED";
       performanceIcon = Icons.refresh;
       gradientColors = [const Color(0xFFF87171), const Color(0xFFEF4444)];
     }
@@ -1124,6 +561,7 @@ class QuizScreen extends StatelessWidget {
         // Celebrate success with confetti
         if (percentage >= 80)
           Positioned.fill(child: CustomPaint(painter: ConfettiPainter())),
+
         Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -1138,23 +576,21 @@ class QuizScreen extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
+                        Theme.of(context).colorScheme.surface.withOpacity(0.9),
                         Theme.of(
                           context,
-                        ).colorScheme.surface.withValues(alpha: 0.9),
-                        Theme.of(
-                          context,
-                        ).scaffoldBackgroundColor.withValues(alpha: 0.95),
+                        ).scaffoldBackgroundColor.withOpacity(0.95),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(40),
                     border: Border.all(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.1),
+                      ).colorScheme.onSurface.withOpacity(0.1),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withOpacity(0.1),
                         blurRadius: 40,
                         spreadRadius: 5,
                         offset: const Offset(0, 20),
@@ -1163,196 +599,228 @@ class QuizScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      // Mastery Badge
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: gradientColors,
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: gradientColors[0].withValues(alpha: 0.5),
-                              blurRadius: 30,
-                              spreadRadius: 5,
+                      // Mastery Badge with Rank Progress
+                      Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: gradientColors,
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: gradientColors.first.withOpacity(0.4),
+                                  blurRadius: 30,
+                                  spreadRadius: 8,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Icon(
-                          performanceIcon,
-                          size: 64,
-                          color: Colors.white,
-                        ),
+                            child: Icon(
+                              performanceIcon,
+                              size: 64,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Rank Progress Bar
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      historyController.currentRank,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                    Text(
+                                      historyController.nextRankTitle,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                        color: Colors.grey.withOpacity(0.7),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: LinearProgressIndicator(
+                                    value: historyController.rankProgress,
+                                    backgroundColor: Colors.grey.withOpacity(
+                                      0.1,
+                                    ),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      gradientColors.first,
+                                    ),
+                                    minHeight: 6,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${historyController.missionsToNextRank} missions to promotion",
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    color: Colors.grey.withOpacity(0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 24),
+
                       Text(
                         performanceMessage,
                         style: TextStyle(
-                          color: gradientColors[0],
-                          fontSize: 20,
+                          fontSize: 24,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 2,
+                          color: gradientColors.first,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Animated Score
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: percentage.toDouble()),
+                        duration: const Duration(seconds: 2),
+                        curve: Curves.easeOutExpo,
+                        builder: (context, value, child) {
+                          return Text(
+                            "${value.toInt()}%",
+                            style: TextStyle(
+                              fontSize: 64,
+                              fontWeight: FontWeight.w900,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              height: 1,
+                            ),
+                          );
+                        },
+                      ),
+
+                      Text(
+                        "SCORE",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.4),
                         ),
                       ),
                       const SizedBox(height: 32),
 
-                      // THE SCORE ORB
-                      Stack(
-                        alignment: Alignment.center,
+                      // Detailed Stats Grid
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          SizedBox(
-                            height: 160,
-                            width: 160,
-                            child: CircularProgressIndicator(
-                              value: percentage / 100,
-                              strokeWidth: 16,
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.1),
-                              color: gradientColors[0],
-                              strokeCap: StrokeCap.round,
-                            ),
+                          _buildStatItem(
+                            context,
+                            "$correct",
+                            "CORRECT",
+                            Colors.green,
+                            Icons.check_circle_outline,
                           ),
-                          Column(
-                            children: [
-                              Text(
-                                "$percentage%",
-                                style: TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.w900,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                ),
-                              ),
-                              Text(
-                                "SCORE",
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.5),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                            ],
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: Theme.of(context).dividerColor,
+                          ),
+                          _buildStatItem(
+                            context,
+                            "$wrong",
+                            "WRONG",
+                            Colors.redAccent,
+                            Icons.cancel_outlined,
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 40),
-
-                      // GRANULAR PERFORMANCE STATS
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildPremiumStat(
-                              context,
-                              "CORRECT",
-                              "$correct",
-                              Colors.greenAccent,
-                              Icons.check_circle,
-                            ),
-                            Container(
-                              width: 1,
-                              height: 40,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.1),
-                            ),
-                            _buildPremiumStat(
-                              context,
-                              "WRONG",
-                              "$wrong",
-                              Colors.redAccent,
-                              Icons.cancel,
-                            ),
-                            Container(
-                              width: 1,
-                              height: 40,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.1),
-                            ),
-                            _buildPremiumStat(
-                              context,
-                              "TOTAL",
-                              "$total",
-                              Theme.of(context).colorScheme.onSurface,
-                              Icons.list_alt,
-                            ),
-                          ],
-                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
 
-                // POST-QUIZ FLOW ACTIONS
                 SizedBox(
                   width: double.infinity,
                   height: 60,
                   child: ElevatedButton(
-                    onPressed: controller.enterReviewMode,
+                    onPressed: () {
+                      controller.enterReviewMode();
+                    },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 10,
-                      shadowColor: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.4),
+                      backgroundColor: Theme.of(context).cardColor,
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.1),
+                        ),
                       ),
                     ),
                     child: const Text(
                       'REVIEW ANSWERS',
                       style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 SizedBox(
                   width: double.infinity,
                   height: 60,
-                  child: OutlinedButton(
-                    onPressed: controller.startNewQuiz,
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.5),
-                        width: 2,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-                    child: const Text(
-                      'START NEW QUIZ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                        fontSize: 16,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        controller.startNewQuiz();
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'RETURN TO BASE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -1365,178 +833,161 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
-  /// Reusable stat cell for results summary
-  Widget _buildPremiumStat(
+  Widget _buildStatItem(
     BuildContext context,
-    String label,
     String value,
+    String label,
     Color color,
     IconData icon,
   ) {
     return Column(
       children: [
-        Icon(icon, color: color.withValues(alpha: 0.8), size: 20),
+        Icon(icon, color: color, size: 24),
         const SizedBox(height: 8),
         Text(
           value,
           style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         Text(
           label,
           style: TextStyle(
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.4),
             fontSize: 10,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
             letterSpacing: 1,
           ),
         ),
       ],
     );
   }
+}
 
-  /// Handles switching between upload zone and file dashboard
-  Widget _buildDocumentSourceCard(
-    BuildContext context,
-    QuizController controller,
-  ) {
-    return Obx(() {
-      final hasFile = controller.pickedFileName.value != null;
-      return AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: hasFile
-            ? _buildFileDashboard(context, controller)
-            : _buildUploadZone(context, controller),
-      );
-    });
+class AILoadingView extends StatefulWidget {
+  const AILoadingView({super.key});
+
+  @override
+  State<AILoadingView> createState() => _AILoadingViewState();
+}
+
+class _AILoadingViewState extends State<AILoadingView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
   }
 
-  /// Render the interactive upload catchment area
-  Widget _buildUploadZone(BuildContext context, QuizController controller) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      onTap: () => controller.pickFile(),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withOpacity(0.02)
-              : Colors.black.withOpacity(0.02),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          children: [
-            // Floating cloud icon
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.cloud_upload_outlined,
-                size: 32,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "Tap to select book/notes",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "PDF format only (Max 200MB)",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
-  /// Renders file-specific management controls once picked
-  Widget _buildFileDashboard(BuildContext context, QuizController controller) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withOpacity(0.05)
-            : Colors.black.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.3), width: 1),
-      ),
-      child: Row(
+  @override
+  Widget build(BuildContext context) {
+    final QuizController controller = Get.find();
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // PDF Icon with themed background
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.picture_as_pdf_rounded,
-              color: Colors.redAccent,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Filename and status info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  controller.pickedFileName.value ?? "",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              // Outer Rotating Ring
+              RotationTransition(
+                turns: _controller,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.blue.withOpacity(0.3),
+                      width: 2,
+                      style: BorderStyle.solid,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Document Ready",
-                  style: TextStyle(
-                    color: Colors.greenAccent.shade700,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.blue.withOpacity(0.6),
+                        width: 1,
+                      ),
+                    ),
                   ),
                 ),
-              ],
+              ),
+              // Inner Reverse Rotating Ring
+              RotationTransition(
+                turns: ReverseAnimation(_controller),
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.purple.withOpacity(0.5),
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+              // Core Pulsing Icon
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.8, end: 1.2),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeInOut,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Icon(
+                      Icons.psychology,
+                      size: 32,
+                      color: Colors.blueAccent.withOpacity(0.9),
+                    ),
+                  );
+                },
+                onEnd:
+                    () {}, // Repeat logic could be handled by parent state rebuids or separate controller
+              ),
+            ],
+          ),
+          const SizedBox(height: 40),
+          // Dynamic Loading Message
+          Obx(
+            () => AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Text(
+                controller.loadingMessage.value,
+                key: ValueKey<String>(controller.loadingMessage.value),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
+                ),
+              ),
             ),
           ),
-          // Removal trigger
-          IconButton(
-            onPressed: () => controller.removeFile(),
-            icon: const Icon(
-              Icons.delete_outline_rounded,
-              color: Colors.redAccent,
+          const SizedBox(height: 10),
+          Text(
+            "AI AGENT ACTIVE",
+            style: TextStyle(
+              color: Colors.blueAccent.withOpacity(0.8),
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
             ),
-            tooltip: "Remove file",
           ),
         ],
       ),
@@ -1757,180 +1208,6 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
               ),
             );
           },
-        ),
-      ),
-    ],
-  );
-}
-
-/// Helper builder for the navigation category tabs
-Widget _buildTypeTab(
-  BuildContext context,
-  QuizController controller,
-  String label,
-  IconData icon,
-) {
-  return GestureDetector(
-    onTap: () => controller.setType(label),
-    child: Obx(() {
-      bool isSelected = controller.selectedType.value == label;
-
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: isSelected
-              ? const LinearGradient(
-                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withOpacity(0.4),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  ),
-                ]
-              : [],
-        ),
-        child: AnimatedScale(
-          // Subtle scale feedback when active
-          scale: isSelected ? 1.05 : 1.0,
-          duration: const Duration(milliseconds: 300),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: isSelected
-                      ? Colors.white
-                      : Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.4),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.4),
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    letterSpacing: isSelected ? 0.5 : 0,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }),
-  );
-}
-
-/// Specialized chip for difficulty level selection
-Widget _buildDifficultyChip(
-  BuildContext context,
-  QuizController controller,
-  String level,
-) {
-  return GestureDetector(
-    onTap: () => controller.setDifficulty(level),
-    child: Obx(() {
-      bool isSelected = controller.difficulty.value == level;
-      bool isDark = Theme.of(context).brightness == Brightness.dark;
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.blue.withOpacity(0.1)
-              : (isDark
-                    ? Colors.white.withOpacity(0.02)
-                    : Colors.black.withOpacity(0.02)),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? Colors.blue[400]!
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              level.toUpperCase(),
-              style: TextStyle(
-                color: isSelected
-                    ? Colors.blue[400]
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1,
-              ),
-            ),
-          ),
-        ),
-      );
-    }),
-  );
-}
-
-/// Generic wrapper for sections with glass effect and consistent headers
-Widget _buildGlassCard(
-  BuildContext context, {
-  required String title,
-  required Widget child,
-}) {
-  bool isDark = Theme.of(context).brightness == Brightness.dark;
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Section title with premium spacing
-      Padding(
-        padding: const EdgeInsets.only(left: 4, bottom: 8),
-        child: Text(
-          title.toUpperCase(),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
-          ),
-        ),
-      ),
-      // Frosted Glass Content Area
-      ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF0F172A).withOpacity(0.6)
-                  : Colors.white.withOpacity(0.85),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withOpacity(0.08),
-              ),
-            ),
-            child: child,
-          ),
         ),
       ),
     ],
