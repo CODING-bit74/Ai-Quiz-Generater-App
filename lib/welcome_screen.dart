@@ -1,9 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:test_project/quiz_screen.dart';
 import 'package:test_project/performance_lab_screen.dart';
+import 'package:test_project/target_configuration_screen.dart';
 import 'controllers/theme_controller.dart';
+import 'controllers/history_controller.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -56,12 +57,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   Widget build(BuildContext context) {
     final ThemeController themeController = Get.find();
+    final HistoryController historyController = Get.find();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: _buildThemeToggle(context, themeController),
-
       body: Stack(
         children: [
           // Background Mesh Gradient Effect
@@ -72,15 +73,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 top: -50 + _offsetAnimation1.value.dy,
                 right: -50 + _offsetAnimation1.value.dx,
                 child: Opacity(
-                  opacity: 0.8 + (_controller1.value * 0.2), // Pulse opacity
+                  opacity: 0.6 + (_controller1.value * 0.2),
                   child: Container(
-                    width: 400 + (_controller1.value * 50), // Pulse size
+                    width: 400 + (_controller1.value * 50),
                     height: 400 + (_controller1.value * 50),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.blue.withOpacity(0.4),
+                          Colors.blue.withOpacity(0.3),
                           Colors.transparent,
                         ],
                       ),
@@ -97,15 +98,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 bottom: -50 + _offsetAnimation2.value.dy,
                 left: -50 + _offsetAnimation2.value.dx,
                 child: Opacity(
-                  opacity: 0.8 + (_controller2.value * 0.2), // Pulse opacity
+                  opacity: 0.6 + (_controller2.value * 0.2),
                   child: Container(
-                    width: 300 + (_controller2.value * 30), // Pulse size
+                    width: 300 + (_controller2.value * 30),
                     height: 300 + (_controller2.value * 30),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFF6366F1).withOpacity(0.4),
+                          const Color(0xFF6366F1).withOpacity(0.3),
                           Colors.transparent,
                         ],
                       ),
@@ -149,40 +150,53 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           alignment: Alignment.center,
                           children: [
                             Container(
-                              width: 240,
-                              height: 240,
+                              width: 200,
+                              height: 200,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.05),
+                                  color: Colors.white.withOpacity(0.1),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.blue.withOpacity(0.1),
-                                    blurRadius: 60,
-                                    spreadRadius: 10,
+                                    color: Colors.blue.withOpacity(0.15),
+                                    blurRadius: 40,
+                                    spreadRadius: 5,
                                   ),
                                 ],
                               ),
                             ),
+                            // Pulsing Ring
+                            ScaleTransition(
+                              scale: Tween(begin: 0.95, end: 1.05).animate(
+                                CurvedAnimation(
+                                  parent: _controller1,
+                                  curve: Curves.easeInOut,
+                                ),
+                              ),
+                              child: Container(
+                                width: 180,
+                                height: 180,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.blue.withOpacity(0.3),
+                                    width: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
                             ClipOval(
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                                child: Container(
-                                  width: 200,
-                                  height: 200,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white.withOpacity(0.03),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.1),
+                              child: Container(
+                                width: 160,
+                                height: 160,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: const DecorationImage(
+                                    image: AssetImage(
+                                      'assets/images/robot_avatar.png',
                                     ),
-                                    image: const DecorationImage(
-                                      image: AssetImage(
-                                        'assets/images/quiz_agent.jpg',
-                                      ),
-                                      fit: BoxFit.cover,
-                                    ),
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
                               ),
@@ -191,9 +205,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         ),
                       ),
 
-                      const SizedBox(height: 60),
+                      const SizedBox(height: 50),
 
-                      // Animated Text Polish
+                      // Dynamic Welcome Text & Rank
                       TweenAnimationBuilder<double>(
                         tween: Tween(begin: 20, end: 0),
                         duration: const Duration(milliseconds: 800),
@@ -205,37 +219,98 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         },
                         child: Column(
                           children: [
-                            Text(
-                              "AI QUIZ AGENT",
-                              style: TextStyle(
-                                color: isDark ? Colors.white : Colors.black87,
-                                fontSize: 36,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 4,
+                            TweenAnimationBuilder<int>(
+                              key: const ValueKey("typewriter_animation"),
+                              tween: IntTween(
+                                begin: 0,
+                                end: "WELCOME TO GOVPREP AI".length,
                               ),
+                              duration: const Duration(milliseconds: 1500),
+                              builder: (context, value, child) {
+                                return Text(
+                                  "WELCOME TO GOVPREP AI".substring(0, value),
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.6),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 3,
+                                  ),
+                                );
+                              },
                             ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.blue.withOpacity(0.2),
+                            const SizedBox(height: 8),
+                            Obx(
+                              () => ShaderMask(
+                                shaderCallback: (bounds) {
+                                  return LinearGradient(
+                                    colors: isDark
+                                        ? [Colors.white, Colors.blueAccent]
+                                        : [Colors.black87, Colors.blue[800]!],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ).createShader(bounds);
+                                },
+                                child: Text(
+                                  historyController.currentRank,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 42,
+                                    height: 1.1,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 2,
+                                  ),
                                 ),
                               ),
-                              child: Text(
-                                "Your Smart Ai Exam Companion",
-                                style: TextStyle(
-                                  color: isDark
-                                      ? Colors.blue[100]
-                                      : Colors.blue[900],
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 1,
+                            ),
+                            const SizedBox(height: 24),
+                            // Stats Pill
+                            Obx(
+                              () => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surface.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.1),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.emoji_events_outlined,
+                                      size: 16,
+                                      color: Colors.orange,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "${historyController.history.length} MISSIONS COMPLETED",
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -245,16 +320,19 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                       const Spacer(),
 
-                      // CTA Button with Glass Polish
+                      // Primary CTA: Enter Playground
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
                         child: TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0.0, end: 1.0),
-                          duration: const Duration(seconds: 1),
+                          duration: const Duration(milliseconds: 800),
                           builder: (context, value, child) {
                             return Opacity(
                               opacity: value.clamp(0.0, 1.0),
-                              child: child,
+                              child: Transform.translate(
+                                offset: Offset(0, 20 * (1 - value)),
+                                child: child,
+                              ),
                             );
                           },
                           child: GestureDetector(
@@ -270,7 +348,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                         context,
                                         animation,
                                         secondaryAnimation,
-                                      ) => const QuizScreen(),
+                                      ) => const TargetConfigurationScreen(),
                                   transitionsBuilder:
                                       (
                                         context,
@@ -286,81 +364,124 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                 ),
                               );
                             },
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(30),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                  sigmaX: 10,
-                                  sigmaY: 10,
+                            child: Container(
+                              height: 60,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF3B82F6),
+                                    Color(0xFF2563EB),
+                                  ],
                                 ),
-                                child: Container(
-                                  height: 64,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        const Color(
-                                          0xFF3B82F6,
-                                        ).withOpacity(0.9),
-                                        const Color(
-                                          0xFF2563EB,
-                                        ).withOpacity(0.9),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(30),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF3B82F6,
+                                    ).withOpacity(0.4),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(
+                                    Icons.play_circle_fill_rounded,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    "ENTER PLAYGROUND",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.5,
                                     ),
                                   ),
-                                  child: const Center(
-                                    child: Text(
-                                      "GET STARTED",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 1.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                ],
                               ),
                             ),
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
-                      // Performance Lab Secondary CTA
-                      TextButton.icon(
-                        onPressed: () =>
-                            Get.to(() => const PerformanceLabScreen()),
-                        icon: const Icon(Icons.analytics_rounded, size: 18),
-                        label: const Text(
-                          "VIEW PERFORMANCE VAULT",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.2,
+                      // Secondary CTA: Performance Vault
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 800),
+                          builder: (context, value, child) {
+                            return Opacity(
+                              opacity: value.clamp(0.0, 1.0),
+                              child: Transform.translate(
+                                offset: Offset(0, 20 * (1 - value)),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: GestureDetector(
+                            onTap: () =>
+                                Get.to(() => const PerformanceLabScreen()),
+                            child: Container(
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surface.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.1),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.analytics_outlined,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    "PERFORMANCE VAULT",
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: isDark
-                              ? Colors.white38
-                              : Colors.black38,
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 40),
                       Text(
                         "Powered by 🌟StarAppAi",
                         style: TextStyle(
-                          color: isDark ? Colors.white24 : Colors.black26,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.3),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),

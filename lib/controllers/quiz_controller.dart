@@ -112,6 +112,8 @@ class QuizController extends GetxController {
     'GA/GS': ['Current Affairs', 'History', 'Polity', 'Geography', 'Science'],
   };
 
+  final List<String> difficulties = ['Easy', 'Medium', 'Hard'];
+
   // Comprehensive list of official Indian languages (Schedule VIII)
   final List<String> languages = [
     'Assamese',
@@ -280,6 +282,9 @@ class QuizController extends GetxController {
     } else if (selectedType.value == 'Link' || selectedType.value == 'Text') {
       loadingMessage.value = "STUDYING CONTENT...";
     }
+
+    // Start AI Status Message Rotation
+    _simulateAIProcessing();
 
     // Step 3: Trigger Generation API
     try {
@@ -517,5 +522,23 @@ class QuizController extends GetxController {
     setSubject(subject);
     setExam(exam);
     generateQuiz();
+  }
+
+  /// Cycles through "AI Thinking" messages to keep the user engaged during loading
+  void _simulateAIProcessing() async {
+    final List<String> steps = [
+      "ANALYZING EXAM PATTERNS...",
+      "SCANNING KNOWLEDGE BASE...",
+      "CALIBRATING DIFFICULTY...",
+      "DRAFTING QUESTIONS...",
+      "VERIFYING ANSWERS...",
+      "OPTIMIZING FOR YOU...",
+    ];
+
+    for (var step in steps) {
+      if (!isLoading.value) break;
+      loadingMessage.value = step;
+      await Future.delayed(const Duration(milliseconds: 800));
+    }
   }
 }
