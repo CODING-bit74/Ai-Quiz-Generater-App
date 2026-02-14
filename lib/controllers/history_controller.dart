@@ -132,4 +132,20 @@ class HistoryController extends GetxController {
 
     return (count - lowerBound) / (upperBound - lowerBound);
   }
+
+  // Leaderboard Logic: Get top 20 results sorted by score
+  List<QuizResult> get topScores {
+    // Create a copy to avoid modifying the original observable list in place if using sort directly
+    List<QuizResult> sortedHistory = List.from(history);
+
+    // Sort by Score Descending, then by Date Descending (newest first for ties)
+    sortedHistory.sort((a, b) {
+      int scoreComp = b.score.compareTo(a.score);
+      if (scoreComp != 0) return scoreComp;
+      return b.date.compareTo(a.date);
+    });
+
+    // Return top 20
+    return sortedHistory.take(20).toList();
+  }
 }

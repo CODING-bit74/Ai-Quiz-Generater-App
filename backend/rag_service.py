@@ -16,6 +16,7 @@ import requests
 import tempfile
 # BeautifulSoup for web scraping and HTML parsing
 from bs4 import BeautifulSoup
+from youtube_transcript_api import YouTubeTranscriptApi
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -165,14 +166,30 @@ class RAGService:
         
         # Handle scraping for external links
         if input_type == "link":
-            print(f"Scraping URL: {topic}")
-            raw_scraped = self._scrape_url(topic)
-            if not raw_scraped:
-                context_text = "Failed to scrape content. Fallback to general knowledge."
+            if "youtube.com" in topic or "youtu.be" in topic:
+                print(f"Detected YouTube URL: {topic}")
+                raw_scraped = self._fetch_youtube_transcript(topic)
+                if not raw_scraped:
+                    # STRICT MODE: If user wants a video quiz, we MUST have the video content.
+                    # Fallback to general knowledge would be misleading.
+                    context_text = "ERROR: Could not fetch transcript. Please ensure the video has closed captions (CC) enabled."
+                    # We will handle this error string in the response or let the prompt handle it, 
+                    # but better to raise an exception to stop generation if we want to be strict.
+                    # For now, let's set a specific error flag in the text that the prompt might catch, 
+                    # OR just raise an actual value error to return 500/400.
+                    raise ValueError("Could not fetch transcript from YouTube video. Please check if the video has captions.")
+                else:
+                    print("Refining YouTube transcript for factual precision...")
+                    context_text = self._refine_context(raw_scraped, "YouTube Video Transcript")
             else:
-                # STAGE 1: Refinement (Study the content first)
-                print("Refining scraped content for factual precision...")
-                context_text = self._refine_context(raw_scraped, topic)
+                print(f"Scraping URL: {topic}")
+                raw_scraped = self._scrape_url(topic)
+                if not raw_scraped:
+                    context_text = "Failed to scrape content. Fallback to general knowledge."
+                else:
+                    # STAGE 1: Refinement (Study the content first)
+                    print("Refining scraped content for factual precision...")
+                    context_text = self._refine_context(raw_scraped, topic)
         
         # Use user-provided text directly
         elif input_type == "text":
@@ -213,9 +230,17 @@ class RAGService:
 
         # --- PHASE 2: PROMPT CONSTRUCT AND GENERATION ---
 
+        # OVERRIDE: If we detected a specific subject from the content (YouTube/Doc/Link), use it!
+        # This prevents the frontend default "Quant" from forcing math questions on a History video.
+        if self._last_detected_subject and input_type in ["link", "document", "text"]:
+            print(f"Overriding provided subject '{subject}' with detected subject '{self._last_detected_subject}'")
+            subject = self._last_detected_subject
+            # Also update topic to the detected concise topic if available
+            if self._last_detected_topic:
+                topic = self._last_detected_topic
+
         # Formatting detailed target info for the LLM
         target_info = f"Target Exam: {exam_name} ({exam_sector})" if exam_name else f"Target Sector: {exam_sector}"
-        subject_info = f"Subject: {subject}" if subject else ""
         
         # --- PHASE 2: EXAM-SPECIFIC DIFFICULTY PERSONAS ---
         difficulty_mapping = {
@@ -449,4 +474,86 @@ Return ONLY the JSON. No conversational text.
             
         except Exception as e:
             print(f"Scraping error: {e}")
+            return ""
+
+    def _fetch_youtube_transcript(self, url: str) -> str:
+        """Fetches the transcript of a YouTube video."""
+        try:
+            # Extract video ID
+            video_id = None
+            if "youtube.com/watch?v=" in url:
+                video_id = url.split("v=")[1].split("&")[0]
+            elif "youtu.be/" in url:
+                video_id = url.split("youtu.be/")[1].split("?")[0]
+            elif "youtube.com/live/" in url:
+                video_id = url.split("live/")[1].split("?")[0]
+            
+            if not video_id:
+                print("Could not extract video ID from URL")
+                return ""
+
+            print(f"Fetching transcript for video ID: {video_id}")
+            
+            print(f"Fetching transcript for video ID: {video_id}")
+            
+            # Instantiate the API class
+            try:
+                # Based on installed package inspection, this class requires instantiation
+                yt_api = YouTubeTranscriptApi()
+                
+                # Use the .fetch() instance method which wraps list().find().fetch()
+                transcript_list = yt_api.fetch(
+                    video_id, 
+                    languages=['en', 'hi', 'en-IN', 'hi-IN']
+                )
+                
+                # Extract text
+                # The fetch method returns a FetchedTranscript object which is iterable
+                # Each item is a FetchedTranscriptSnippet object with .text attribute
+                full_text = ""
+                for item in transcript_list:
+                    if hasattr(item, 'text'):
+                        full_text += item.text + " "
+                    elif isinstance(item, dict) and 'text' in item:
+                        full_text += item['text'] + " "
+                    else:
+                        full_text += str(item) + " "
+                
+                print(f"Fetched {len(full_text)} characters from YouTube transcript.")
+                return full_text[:25000]
+                
+            except Exception as e:
+                print(f"YouTube transcript error: {e}")
+                # Try fallback list method just in case fetch fails but others exist
+                try:
+                    yt_api = YouTubeTranscriptApi()
+                    tx_list = yt_api.list(video_id)
+                    # Find any transcript that matches our languages or just the first generated one
+                    try:
+                        transcript = tx_list.find_transcript(['en', 'hi', 'en-IN', 'hi-IN'])
+                    except:
+                        # Fallback to any transcript if specific language not found
+                        print("Preferred language not found, taking first available.")
+                        transcript = next(iter(tx_list))
+                        
+                    data = transcript.fetch()
+                    
+                    # Handle fallback data extraction same way
+                    full_text = ""
+                    for item in data:
+                        if hasattr(item, 'text'):
+                            full_text += item.text + " "
+                        elif isinstance(item, dict) and 'text' in item:
+                            full_text += item['text'] + " "
+                        else:
+                            full_text += str(item) + " "
+
+                    print(f"Fallback fetched {len(full_text)} chars.")
+                    return full_text[:25000]
+                except Exception as e2:
+                    print(f"Critical transcript failure: {e2}")
+                    return ""
+        
+        except Exception as e:
+            print(f"YouTube transcript error: {e}")
             return ""
