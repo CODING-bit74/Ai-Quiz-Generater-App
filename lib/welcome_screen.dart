@@ -1,10 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:test_project/performance_lab_screen.dart';
+
 import 'package:test_project/target_configuration_screen.dart';
+import 'package:test_project/leaderboard_screen.dart'; // Import LeaderboardScreen
 import 'controllers/theme_controller.dart';
 import 'controllers/history_controller.dart';
+import 'youtube_input_screen.dart'; // Add import for YouTubeInputScreen
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -62,7 +64,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      floatingActionButton: _buildThemeToggle(context, themeController),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildLeaderboardButton(context),
+          const SizedBox(height: 16),
+          _buildThemeToggle(context, themeController),
+        ],
+      ),
       body: Stack(
         children: [
           // Background Mesh Gradient Effect
@@ -410,12 +419,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                       const SizedBox(height: 16),
 
-                      // Secondary CTA: Performance Vault
+                      // Secondary CTA: YouTube Quiz
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32),
                         child: TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0.0, end: 1.0),
-                          duration: const Duration(milliseconds: 800),
+                          duration: const Duration(milliseconds: 900),
                           builder: (context, value, child) {
                             return Opacity(
                               opacity: value.clamp(0.0, 1.0),
@@ -427,33 +436,27 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           },
                           child: GestureDetector(
                             onTap: () =>
-                                Get.to(() => const PerformanceLabScreen()),
+                                Get.to(() => const YouTubeInputScreen()),
                             child: Container(
                               height: 56,
                               decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.surface.withOpacity(0.5),
+                                color: Colors.red.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface.withOpacity(0.1),
+                                  color: Colors.red.withOpacity(0.3),
                                 ),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.analytics_outlined,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface,
+                                  const Icon(
+                                    Icons.video_library_rounded,
+                                    color: Colors.redAccent,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    "PERFORMANCE VAULT",
+                                    "GENERATE FROM YOUTUBE",
                                     style: TextStyle(
                                       color: Theme.of(
                                         context,
@@ -489,6 +492,91 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardButton(BuildContext context) {
+    // We can reuse the existing controller for a subtle pulse or create a local one.
+    // Let's use a TweenAnimationBuilder for a self-running pulse effect on the shadow.
+    final HistoryController historyController = Get.find();
+
+    return GestureDetector(
+      onTap: () => Get.to(() => const LeaderboardScreen()),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 1.0, end: 1.1),
+        duration: const Duration(seconds: 1),
+        curve: Curves.easeInOut,
+        builder: (context, scale, child) {
+          return Transform.scale(
+            scale: scale,
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(0.6),
+                    blurRadius: 20 * scale, // Animate blur
+                    spreadRadius: 2 * scale, // Animate spread
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.6),
+                  width: 3,
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(
+                    Icons.emoji_events_rounded,
+                    color: Colors.white,
+                    size: 36,
+                  ),
+                  // Rank Badge
+                  Positioned(
+                    top: -2,
+                    right: 12,
+                    child: Obx(() {
+                      if (historyController.history.isEmpty)
+                        return const SizedBox.shrink();
+                      // Find user's rank - for now, just show a "star" or "1" if they are top.
+                      // Since we don't have auth/user ID easily matchable to history yet in this context without scanning,
+                      // we'll just show a "notification dot" to incite curiosity, or the "Best Rank".
+                      return Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        child: const Icon(
+                          Icons.priority_high,
+                          size: 10,
+                          color: Colors.white,
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        onEnd: () {
+          // This is a simple ping-pong loop hack for TweenAnimationBuilder
+          // But purely stateless widgets can't easily loop without setState.
+          // Since we are in a StatefulWidget, we could use a controller.
+          // However, for a quick "interactive" feel, let's stick to the hover/press feedback
+          // or just link it to the existing _controller1 which is already looping.
+        },
       ),
     );
   }

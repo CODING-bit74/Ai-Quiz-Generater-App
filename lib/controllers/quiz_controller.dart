@@ -10,6 +10,8 @@ import 'package:file_picker/file_picker.dart';
 import '../models/history_model.dart';
 import '../services/database_service.dart';
 import 'history_controller.dart';
+import '../data/loading_tips.dart';
+import 'dart:math';
 
 class QuizController extends GetxController {
   // --- UI & ERROR STATE (GETX OBSERVABLES) ---
@@ -48,6 +50,8 @@ class QuizController extends GetxController {
   // Detected metadata from AI refinement
   var detectedSubject = RxnString();
   var detectedTopic = RxnString();
+  // Current educational tip shown during loading
+  var currentTip = "".obs;
 
   // --- GAMEPLAY & SESSION STATE ---
 
@@ -78,14 +82,6 @@ class QuizController extends GetxController {
   // Transition animation for playground entrance
   Timer? _logoTimer;
   var currentLogoIndex = 0.obs;
-  // List of icons rendered during the playground loading transition
-  final List<IconData> gameLogos = [
-    Icons.sports_esports,
-    Icons.videogame_asset,
-    Icons.casino,
-    Icons.auto_awesome,
-    Icons.rocket_launch,
-  ];
 
   // --- DATA MAPS (CORE CONFIGURATION) ---
 
@@ -243,13 +239,24 @@ class QuizController extends GetxController {
   }
 
   /// Main entry point for the quiz generation flow.
-  Future<void> generateQuiz() async {
-    final input = inputController.text.trim();
+  Future<void> generateQuiz({
+    String? topic,
+    String? inputType,
+    String? language,
+    String? difficulty,
+  }) async {
+    final input = topic ?? inputController.text.trim();
+    final type = inputType ?? selectedType.value;
+    final lang = language ?? selectedLanguage.value;
+    final diff = difficulty ?? this.difficulty.value;
+
+    // Ensure state reflects the input type so UI reacts appropriately
+    if (inputType != null) {
+      selectedType.value = inputType;
+    }
 
     // Step 1: Validation
-    if (selectedType.value != 'Topic' &&
-        selectedType.value != 'Document' &&
-        input.isEmpty) {
+    if (type != 'Topic' && type != 'Document' && input.isEmpty) {
       Get.snackbar(
         'Error',
         'Please enter content to transform!',
@@ -267,7 +274,7 @@ class QuizController extends GetxController {
     isQuizActive.value = false;
 
     // Step 2: Handle Background Indexing for Documents
-    if (selectedType.value == 'Document') {
+    if (type == 'Document') {
       loadingMessage.value = "UPLOADING DOCUMENT...";
       if (pickedFilePath.value == null) {
         Get.snackbar('Error', 'Please select a document first!');
@@ -279,12 +286,13 @@ class QuizController extends GetxController {
         isLoading.value = false;
         return;
       }
-    } else if (selectedType.value == 'Link' || selectedType.value == 'Text') {
+    } else if (type == 'Link' || type == 'Text' || type == 'link') {
       loadingMessage.value = "STUDYING CONTENT...";
     }
 
-    // Start AI Status Message Rotation
+    // Start AI Status Message Rotation and Logo Animation
     _simulateAIProcessing();
+    _startLogoAnimation();
 
     // Step 3: Trigger Generation API
     try {
@@ -305,15 +313,13 @@ class QuizController extends GetxController {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'topic': selectedType.value == 'Topic'
+          'topic': type == 'Topic'
               ? selectedTopic.value
-              : (selectedType.value == 'Document'
-                    ? pickedFileName.value
-                    : input),
+              : (type == 'Document' ? pickedFileName.value : input),
           'num_questions': numQuestions.value.toInt(),
-          'difficulty': difficulty.value,
-          'input_type': selectedType.value.toLowerCase(),
-          'language': selectedLanguage.value,
+          'difficulty': diff,
+          'input_type': type.toLowerCase(),
+          'language': lang,
           'exam_sector': selectedSector.value,
           'exam_name': selectedExam.value,
           'subject': selectedSubject.value,
@@ -342,16 +348,23 @@ class QuizController extends GetxController {
     }
   }
 
+  /// Starts the cycling logo animation
+  void _startLogoAnimation() {
+    _logoTimer?.cancel();
+    currentLogoIndex.value = 0;
+    _logoTimer = Timer.periodic(const Duration(milliseconds: 600), (timer) {
+      currentLogoIndex.value = (currentLogoIndex.value + 1) % gameLogos.length;
+    });
+  }
+
   /// Shows the high-end loading playground with cycling logos before starting questions.
   void _showPlaygroundTransition() async {
     isShowingPlayground.value = true;
     isQuizActive.value = false;
-    currentLogoIndex.value = 0;
-
-    // Cycle through gaming logos every 600ms
-    _logoTimer = Timer.periodic(const Duration(milliseconds: 600), (timer) {
-      currentLogoIndex.value = (currentLogoIndex.value + 1) % gameLogos.length;
-    });
+    // Don't reset logo index here if it's already running from loading phase
+    if (_logoTimer == null || !_logoTimer!.isActive) {
+      _startLogoAnimation();
+    }
 
     await Future.delayed(const Duration(seconds: 3));
 
@@ -524,20 +537,100 @@ class QuizController extends GetxController {
     generateQuiz();
   }
 
+  // --- ANIMATION LOGIC ---
+
+  // List of icons rendered during the playground loading transition
+  // Now dynamic based on the quiz type!
+  List<IconData> get gameLogos {
+    if (selectedType.value == 'Link' || selectedType.value == 'link') {
+      return [
+        Icons.play_circle_fill,
+        Icons.video_library_rounded,
+        Icons.subtitles,
+        Icons.analytics_outlined,
+        Icons.ondemand_video_rounded,
+      ];
+    } else if (selectedType.value == 'Document') {
+      return [
+        Icons.description_rounded,
+        Icons.picture_as_pdf_rounded,
+        Icons.upload_file_rounded,
+        Icons.folder_open_rounded,
+        Icons.find_in_page_rounded,
+      ];
+    } else if (selectedType.value == 'Text') {
+      return [
+        Icons.text_snippet_rounded,
+        Icons.article_rounded,
+        Icons.edit_note_rounded,
+        Icons.menu_book_rounded,
+        Icons.segment_rounded,
+      ];
+    }
+    // Topic / Default
+    return [
+      Icons.psychology_rounded,
+      Icons.auto_awesome,
+      Icons.school_rounded,
+      Icons.lightbulb_rounded,
+      Icons.trending_up_rounded,
+    ];
+  }
+
+  // ... (existing timer logic) ...
+
   /// Cycles through "AI Thinking" messages to keep the user engaged during loading
   void _simulateAIProcessing() async {
-    final List<String> steps = [
-      "ANALYZING EXAM PATTERNS...",
-      "SCANNING KNOWLEDGE BASE...",
-      "CALIBRATING DIFFICULTY...",
-      "DRAFTING QUESTIONS...",
-      "VERIFYING ANSWERS...",
-      "OPTIMIZING FOR YOU...",
-    ];
+    List<String> steps;
+    String type = selectedType.value.toLowerCase();
+
+    if (type == 'link') {
+      steps = [
+        "FETCHING VIDEO TRANSCRIPT...",
+        "ANALYZING AUDIO PATTERNS...",
+        "EXTRACTING KEY CONCEPTS...",
+        "GENERATING RELEVANT QUESTIONS...",
+        "VERIFYING FACTS...",
+        "READY FOR PLAYBACK...",
+      ];
+    } else if (type == 'document') {
+      steps = [
+        "READING DOCUMENT FILE...",
+        "PARSING TEXT STRUCTURE...",
+        "IDENTIFYING KEY CHAPTERS...",
+        "EXTRACTING QUIZ CONTENT...",
+        "FORMATTING QUESTIONS...",
+        "FINALIZING DOCUMENT QUIZ...",
+      ];
+    } else if (type == 'text') {
+      steps = [
+        "PROCESSING TEXT INPUT...",
+        "ANALYZING CONTEXT...",
+        "DETECTING THEMES...",
+        "STRUCTURING QUESTIONS...",
+        "VALIDATING ANSWERS...",
+        "PREPARING QUIZ...",
+      ];
+    } else {
+      // Topic
+      steps = [
+        "MAPPING KNOWLEDGE GRAPH...",
+        "SCANNING EXAM PATTERNS...",
+        "CALIBRATING DIFFICULTY...",
+        "DRAFTING QUESTIONS...",
+        "VERIFYING ANSWERS...",
+        "OPTIMIZING FOR YOU...",
+      ];
+    }
 
     for (var step in steps) {
       if (!isLoading.value) break;
       loadingMessage.value = step;
+      // Update tip with a random one occasionally
+      if (Random().nextBool()) {
+        currentTip.value =
+            educationalTips[Random().nextInt(educationalTips.length)];
+      }
       await Future.delayed(const Duration(milliseconds: 800));
     }
   }

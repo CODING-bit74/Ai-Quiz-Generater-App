@@ -114,13 +114,9 @@ class QuizScreen extends StatelessWidget {
   /// Orchestrates the view selection using reactive state
   Widget _buildBody(BuildContext context, QuizController controller) {
     return Obx(() {
-      // 1. Initial generation loading state
-      if (controller.isLoading.value && controller.questions.isEmpty) {
-        return const AILoadingView();
-      }
-
-      // 2. Playground transition state
-      if (controller.isShowingPlayground.value) {
+      // 1. Unified Loading / Playground state
+      if ((controller.isLoading.value && controller.questions.isEmpty) ||
+          controller.isShowingPlayground.value) {
         return _buildPlaygroundView(context, controller);
       }
 
@@ -280,46 +276,122 @@ class QuizScreen extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(height: 60),
+              const SizedBox(height: 50),
               // Main playground title with neon shadow effect
-              Text(
-                "QUIZ PLAYGROUND",
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 4,
-                  shadows: [
-                    Shadow(
-                      color: Colors.blueAccent.withOpacity(0.5),
-                      blurRadius: 20,
-                    ),
-                  ],
+              Obx(
+                () => Text(
+                  _getPlaygroundTitle(controller.selectedType.value),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 3,
+                    shadows: [
+                      Shadow(
+                        color: Colors.blueAccent.withOpacity(0.5),
+                        blurRadius: 20,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                "Prepare for glory...",
-                style: TextStyle(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.7),
-                  fontSize: 16,
-                  letterSpacing: 2,
-                  fontStyle: FontStyle.italic,
+              const SizedBox(height: 10),
+              Obx(
+                () => Text(
+                  controller.loadingMessage.value,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.7),
+                    fontSize: 13,
+                    letterSpacing: 2,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               const SizedBox(height: 40),
               // Visual progress bar for the delay
               SizedBox(
-                width: 200,
-                child: LinearProgressIndicator(
-                  backgroundColor: Colors.white10,
-                  color: Colors.blue,
-                  minHeight: 4,
-                  borderRadius: BorderRadius.circular(2),
+                width: 220,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).dividerColor.withOpacity(0.1),
+                    color: Colors.blueAccent,
+                    minHeight: 6,
+                  ),
                 ),
               ),
+              const SizedBox(height: 50),
+
+              // Educational Tip Carousel
+              Obx(() {
+                if (controller.currentTip.value.isEmpty)
+                  return const SizedBox.shrink();
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  child: Container(
+                    key: ValueKey(controller.currentTip.value),
+                    margin: const EdgeInsets.symmetric(horizontal: 40),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Theme.of(context).dividerColor.withOpacity(0.2),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.lightbulb_outline,
+                              size: 18,
+                              color: Colors.amber,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "BRAIN BOOST",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.amber,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          controller.currentTip.value,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.4,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.8),
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
             ],
           ),
         ),
@@ -349,6 +421,20 @@ class QuizScreen extends StatelessWidget {
         child: Container(),
       ),
     );
+  }
+
+  String _getPlaygroundTitle(String type) {
+    switch (type.toLowerCase()) {
+      case 'link':
+        return "VIDEO INTELLIGENCE";
+      case 'document':
+        return "DOCUMENT PROCESSOR";
+      case 'text':
+        return "CONTENT ANALYSIS";
+      case 'topic':
+      default:
+        return "KNOWLEDGE MAPPING";
+    }
   }
 
   /// Active quiz session interface
@@ -862,135 +948,6 @@ class QuizScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class AILoadingView extends StatefulWidget {
-  const AILoadingView({super.key});
-
-  @override
-  State<AILoadingView> createState() => _AILoadingViewState();
-}
-
-class _AILoadingViewState extends State<AILoadingView>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final QuizController controller = Get.find();
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              // Outer Rotating Ring
-              RotationTransition(
-                turns: _controller,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.blue.withOpacity(0.3),
-                      width: 2,
-                      style: BorderStyle.solid,
-                    ),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.blue.withOpacity(0.6),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Inner Reverse Rotating Ring
-              RotationTransition(
-                turns: ReverseAnimation(_controller),
-                child: Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.purple.withOpacity(0.5),
-                      width: 2,
-                    ),
-                  ),
-                ),
-              ),
-              // Core Pulsing Icon
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.8, end: 1.2),
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.easeInOut,
-                builder: (context, value, child) {
-                  return Transform.scale(
-                    scale: value,
-                    child: Icon(
-                      Icons.psychology,
-                      size: 32,
-                      color: Colors.blueAccent.withOpacity(0.9),
-                    ),
-                  );
-                },
-                onEnd:
-                    () {}, // Repeat logic could be handled by parent state rebuids or separate controller
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-          // Dynamic Loading Message
-          Obx(
-            () => AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: Text(
-                controller.loadingMessage.value,
-                key: ValueKey<String>(controller.loadingMessage.value),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            "AI AGENT ACTIVE",
-            style: TextStyle(
-              color: Colors.blueAccent.withOpacity(0.8),
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
