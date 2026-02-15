@@ -1,7 +1,7 @@
 # Import Flask for API routing and JSON utilities
 from flask import Flask, request, jsonify
-# Import our custom RAG logic service
-from rag_service import RAGService
+# Knowledge base and generation logic
+from rag_service import RAGService, TranscriptNotFoundError
 import os
 
 # Initialize the Flask application
@@ -10,6 +10,39 @@ app = Flask(__name__)
 # Initialize RAG Service global instance
 # This service handles all vector DB interactions and LLM calls
 rag_service = None
+
+# --- SUPABASE AUTHENTICATION ---
+from supabase import create_client, Client
+from functools import wraps
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
+
+def verify_token(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({"error": "Missing Authorization Header"}), 401
+        
+        try:
+            # Expecting 'Bearer <token>'
+            token = auth_header.split(" ")[1]
+            user = supabase.auth.get_user(token)
+            if not user:
+                 return jsonify({"error": "Invalid Token"}), 401
+            # You can inject user info into request if needed, e.g., request.user = user
+        except Exception as e:
+            return jsonify({"error": f"Authentication Failed: {str(e)}"}), 401
+            
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/add_context', methods=['POST'])
 def add_context():
@@ -70,6 +103,7 @@ def upload_document():
             return jsonify({"error": str(e)}), 500
 
 @app.route('/generate_quiz', methods=['POST'])
+@verify_token
 def generate_quiz():
     """Main endpoint to generate a quiz based on various input parameters."""
     global rag_service
@@ -108,6 +142,8 @@ def generate_quiz():
         )
         # Step 2: Return the raw JSON string with correct Content-Type header
         return quiz_json, 200, {'Content-Type': 'application/json'}
+    except TranscriptNotFoundError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         import traceback
         traceback.print_exc() # Useful for debugging in the backend console

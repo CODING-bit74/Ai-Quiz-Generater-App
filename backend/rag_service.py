@@ -29,7 +29,11 @@ load_dotenv(dotenv_path=env_path)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX_NAME = "quiz-generator"
-
+ 
+class TranscriptNotFoundError(Exception):
+    """Custom exception raised when a YouTube transcript cannot be retrieved."""
+    pass
+ 
 # Warn if critical keys are missing
 if not OPENAI_API_KEY:
     print("WARNING: OPENAI_API_KEY not found in environment!")
@@ -177,7 +181,7 @@ class RAGService:
                     # but better to raise an exception to stop generation if we want to be strict.
                     # For now, let's set a specific error flag in the text that the prompt might catch, 
                     # OR just raise an actual value error to return 500/400.
-                    raise ValueError("Could not fetch transcript from YouTube video. Please check if the video has captions.")
+                    raise TranscriptNotFoundError("Could not fetch transcript from YouTube video. Please check if the video has captions.")
                 else:
                     print("Refining YouTube transcript for factual precision...")
                     context_text = self._refine_context(raw_scraped, "YouTube Video Transcript")

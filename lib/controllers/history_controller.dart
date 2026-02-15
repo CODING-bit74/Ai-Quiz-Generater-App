@@ -1,46 +1,62 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../models/history_model.dart';
 import '../services/database_service.dart';
+import '../services/auth_service.dart';
 
 class HistoryController extends GetxController {
   var history = <QuizResult>[].obs;
   var isLoading = false.obs;
 
   // User Profile Stats
-  var credits = 150.obs;
-
-  void deductCredits(int amount) {
-    if (credits.value >= amount) {
-      credits.value -= amount;
-    }
-  }
-
-  void addCredits(int amount) {
-    credits.value += amount;
-  }
+  // User Profile Stats - Rank logic handles the rest
 
   @override
   void onInit() {
     super.onInit();
     loadHistory();
+
+    // Listen for Auth Changes to refresh history for new users
+    ever(AuthService.to.currentUser, (_) {
+      debugPrint(
+        "HistoryController: Auth state changed, refreshing mission history...",
+      );
+      loadHistory();
+    });
   }
 
   // Fetch all results from the database
   Future<void> loadHistory() async {
     isLoading.value = true;
     try {
-      final results = await DatabaseService.instance.getAllResults();
+      final userId = Get.find<AuthService>().userId;
+      // Use a timeout to prevent indefinite hangs
+      final results = await DatabaseService.instance
+          .getAllResults(userId: userId)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              debugPrint("History loading timed out.");
+              return [];
+            },
+          );
       history.assignAll(results);
     } catch (e) {
-      print('Error loading history: $e');
+      debugPrint('Error loading history: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
   // Delete a specific result
-  Future<void> deleteResult(int id) async {
+  Future<void> deleteResult(String id) async {
     await DatabaseService.instance.deleteResult(id);
+    loadHistory();
+  }
+
+  // Clear all history
+  Future<void> resetHistory() async {
+    await DatabaseService.instance.clearAllResults();
     loadHistory();
   }
 

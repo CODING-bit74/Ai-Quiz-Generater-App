@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 class QuizResult {
-  final int? id;
+  final String? id;
+  final String? userId; // Added for data isolation
   final String topic;
   final String examName;
   final String subject;
@@ -12,6 +13,7 @@ class QuizResult {
 
   QuizResult({
     this.id,
+    this.userId,
     required this.topic,
     required this.examName,
     required this.subject,
@@ -26,6 +28,7 @@ class QuizResult {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'userId': userId,
       'topic': topic,
       'examName': examName,
       'subject': subject,
@@ -39,7 +42,8 @@ class QuizResult {
   // Extract a QuizResult object from a Map.
   factory QuizResult.fromMap(Map<String, dynamic> map) {
     return QuizResult(
-      id: map['id'],
+      id: map['id']?.toString(), // Ensure it's a string
+      userId: map['userId']?.toString(),
       topic: map['topic'],
       examName: map['examName'],
       subject: map['subject'],

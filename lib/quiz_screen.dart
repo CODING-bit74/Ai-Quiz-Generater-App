@@ -163,13 +163,17 @@ class QuizScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.error_outline_rounded,
+              (customMessage ?? controller.errorMessage.value ?? "").contains(
+                    "captions",
+                  )
+                  ? Icons.closed_caption_disabled_rounded
+                  : Icons.error_outline_rounded,
               size: 64,
               color: Colors.redAccent.withOpacity(0.8),
             ),
             const SizedBox(height: 24),
             Text(
-              "Ops!",
+              "Oops!",
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 24,
@@ -229,170 +233,188 @@ class QuizScreen extends StatelessWidget {
           left: -50,
           child: _buildGlowingOrb(Colors.purple, 250),
         ),
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Cycling gaming logos with elastic animations
-              Obx(
-                () => TweenAnimationBuilder<double>(
-                  key: ValueKey(controller.currentLogoIndex.value),
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 600),
-                  curve: Curves.elasticOut,
-                  builder: (context, value, child) {
-                    return Transform.scale(
-                      scale: value,
-                      child: Container(
-                        padding: const EdgeInsets.all(30),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.05)
-                              : Colors.black.withOpacity(0.05),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.3 * value),
-                              blurRadius: 40 * value,
-                              spreadRadius: 10 * value,
-                            ),
-                          ],
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.2)
-                                : Colors.black.withOpacity(0.1),
-                            width: 2,
-                          ),
-                        ),
-                        child: Icon(
-                          controller.gameLogos[controller
-                              .currentLogoIndex
-                              .value],
-                          size: 80,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 50),
-              // Main playground title with neon shadow effect
-              Obx(
-                () => Text(
-                  _getPlaygroundTitle(controller.selectedType.value),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 3,
-                    shadows: [
-                      Shadow(
-                        color: Colors.blueAccent.withOpacity(0.5),
-                        blurRadius: 20,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Obx(
-                () => Text(
-                  controller.loadingMessage.value,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.7),
-                    fontSize: 13,
-                    letterSpacing: 2,
-                    fontStyle: FontStyle.italic,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-              // Visual progress bar for the delay
-              SizedBox(
-                width: 220,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).dividerColor.withOpacity(0.1),
-                    color: Colors.blueAccent,
-                    minHeight: 6,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 50),
-
-              // Educational Tip Carousel
-              Obx(() {
-                if (controller.currentTip.value.isEmpty)
-                  return const SizedBox.shrink();
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  child: Container(
-                    key: ValueKey(controller.currentTip.value),
-                    margin: const EdgeInsets.symmetric(horizontal: 40),
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Theme.of(context).dividerColor.withOpacity(0.2),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.lightbulb_outline,
-                              size: 18,
-                              color: Colors.amber,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              "BRAIN BOOST",
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.amber,
-                                letterSpacing: 1.5,
+        SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Cycling gaming logos with elastic animations
+                    Obx(
+                      () => TweenAnimationBuilder<double>(
+                        key: ValueKey(controller.currentLogoIndex.value),
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.elasticOut,
+                        builder: (context, value, child) {
+                          return Transform.scale(
+                            scale: value,
+                            child: Container(
+                              padding: const EdgeInsets.all(30),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.05)
+                                    : Colors.black.withOpacity(0.05),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.blue.withOpacity(0.3 * value),
+                                    blurRadius: 40 * value,
+                                    spreadRadius: 10 * value,
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: isDark
+                                      ? Colors.white.withOpacity(0.2)
+                                      : Colors.black.withOpacity(0.1),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Icon(
+                                controller.gameLogos[controller
+                                    .currentLogoIndex
+                                    .value],
+                                size: 80,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          controller.currentTip.value,
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    // Main playground title with neon shadow effect
+                    Obx(
+                      () => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          _getPlaygroundTitle(controller.selectedType.value),
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 14,
-                            height: 1.4,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.8),
-                            fontStyle: FontStyle.italic,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                            shadows: [
+                              Shadow(
+                                color: Colors.blueAccent.withOpacity(0.5),
+                                blurRadius: 20,
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                );
-              }),
-            ],
+                    const SizedBox(height: 10),
+                    Obx(
+                      () => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 30),
+                        child: Text(
+                          controller.loadingMessage.value,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.7),
+                            fontSize: 13,
+                            letterSpacing: 1.5,
+                            fontStyle: FontStyle.italic,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    // Visual progress bar for the delay
+                    SizedBox(
+                      width: 220,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).dividerColor.withOpacity(0.1),
+                          color: Colors.blueAccent,
+                          minHeight: 6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Educational Tip Carousel
+                    Obx(() {
+                      if (controller.currentTip.value.isEmpty)
+                        return const SizedBox(height: 80);
+                      return AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        child: Container(
+                          key: ValueKey(controller.currentTip.value),
+                          margin: const EdgeInsets.symmetric(horizontal: 30),
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).dividerColor.withOpacity(0.2),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.lightbulb_outline,
+                                    size: 18,
+                                    color: Colors.amber,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "BRAIN BOOST",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.amber,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                controller.currentTip.value,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  height: 1.4,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.8),
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ],
@@ -446,159 +468,255 @@ class QuizScreen extends StatelessWidget {
     final userSelection =
         controller.userAnswers[controller.currentQuestionIndex.value];
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Session progress bar (top)
-          Obx(
-            () => LinearProgressIndicator(
-              value:
-                  (controller.currentQuestionIndex.value + 1) /
-                  controller.questions.length,
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.onSurface.withOpacity(0.1),
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Custom timer badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+    // Using CustomScrollView for a premium, scrollable experience
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(24.0),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // 1. Session progress bar (top)
+              Obx(
+                () => ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value:
+                        (controller.currentQuestionIndex.value + 1) /
+                        controller.questions.length,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.1),
+                    color: Colors.blueAccent,
+                    minHeight: 6,
+                  ),
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.timer, size: 16, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    Obx(
-                      () => Text(
-                        "${controller.remainingSeconds.value}s",
-                        style: TextStyle(
-                          // Alert color for low time
-                          color: controller.remainingSeconds.value < 10
-                              ? Colors.red
-                              : Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+              ),
+              const SizedBox(height: 24),
+
+              // 2. Timer and Step Counter Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Custom timer badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.blueAccent.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.timer_outlined,
+                          size: 18,
+                          color: Colors.blueAccent,
                         ),
+                        const SizedBox(width: 8),
+                        Obx(
+                          () => Text(
+                            "${controller.remainingSeconds.value}s",
+                            style: TextStyle(
+                              color: controller.remainingSeconds.value < 10
+                                  ? Colors.redAccent
+                                  : Colors.blueAccent,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Step counter
+                  Obx(
+                    () => Text(
+                      "QUESTION ${controller.currentQuestionIndex.value + 1} OF ${controller.questions.length}",
+                      style: TextStyle(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.5),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+
+              // 3. Structured Question Card
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Theme.of(context).dividerColor.withOpacity(0.1),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Decorative quote icon
+                    Icon(
+                      Icons.format_quote_rounded,
+                      size: 40,
+                      color: Theme.of(context).primaryColor.withOpacity(0.2),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      question['question'],
+                      style: TextStyle(
+                        fontSize: 20,
+                        height: 1.5,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontFamily: 'Roboto', // Or your app's font
                       ),
                     ),
                   ],
                 ),
               ),
-              // Step counter (e.g., 2/10)
-              Obx(
-                () => Text(
-                  "QUESTION ${controller.currentQuestionIndex.value + 1}/${controller.questions.length}",
+              const SizedBox(height: 32),
+
+              // 4. Options Header
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, bottom: 16),
+                child: Text(
+                  "SELECT AN OPTION",
                   style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.5),
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
+                    ).colorScheme.onSurface.withOpacity(0.4),
                   ),
                 ),
               ),
-            ],
+            ]),
           ),
-          const SizedBox(height: 24),
-          // THE QUESTION TEXT
-          Text(
-            question['question'],
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 32),
-          // INTERACTIVE OPTIONS LIST
-          Expanded(
-            child: ListView.builder(
-              itemCount: options.length,
-              itemBuilder: (context, index) {
-                final option = options[index];
-                final isSelected = userSelection == index;
+        ),
 
-                Color borderColor = Theme.of(
-                  context,
-                ).colorScheme.onSurface.withOpacity(0.1);
-                Color bgColor = Theme.of(context).cardColor;
+        // 5. Scrollable Options List (as slivers)
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final option = options[index];
+              final isSelected = userSelection == index;
 
-                // Visual feedback for selection
-                if (isSelected) {
-                  borderColor = Colors.blue;
-                  bgColor = Colors.blue.withOpacity(0.1);
-                }
+              Color borderColor = Theme.of(
+                context,
+              ).colorScheme.onSurface.withOpacity(0.1);
+              Color bgColor = Theme.of(context).cardColor;
+              Color textColor = Theme.of(
+                context,
+              ).colorScheme.onSurface.withOpacity(0.8);
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: InkWell(
-                    onTap: () => controller.handleOptionSelected(index),
-                    child: ClipRRect(
+              // Visual feedback for selection
+              if (isSelected) {
+                borderColor = Colors.blueAccent;
+                bgColor = Colors.blueAccent.withOpacity(0.1);
+                textColor = Colors.blueAccent;
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: InkWell(
+                  onTap: () => controller.handleOptionSelected(index),
+                  borderRadius: BorderRadius.circular(16),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical:
+                          20, // More vertical padding for multi-line options
+                    ),
+                    decoration: BoxDecoration(
+                      color: bgColor,
                       borderRadius: BorderRadius.circular(16),
-                      child: BackdropFilter(
-                        // Frosted glass effect for options
-                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: bgColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: borderColor, width: 1.5),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  option,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withOpacity(0.7),
-                                  ),
-                                ),
-                              ),
-                              if (isSelected)
-                                const Icon(
-                                  Icons.check_circle_outline,
-                                  color: Colors.blue,
-                                  size: 20,
-                                ),
-                            ],
-                          ),
-                        ),
+                      border: Border.all(
+                        color: borderColor,
+                        width: isSelected ? 2 : 1,
                       ),
                     ),
+                    child: Row(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start, // Align top for long text
+                      children: [
+                        // Radio-like indicator
+                        Container(
+                          width: 24,
+                          height: 24,
+                          margin: const EdgeInsets.only(
+                            top: 2,
+                          ), // Align with text
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.blueAccent
+                                  : Theme.of(
+                                      context,
+                                    ).dividerColor.withOpacity(0.5),
+                              width: 2,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: isSelected
+                              ? Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.blueAccent,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 16),
+                        // Option Text
+                        Expanded(
+                          child: Text(
+                            option,
+                            style: TextStyle(
+                              fontSize: 16,
+                              height: 1.4,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: textColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            }, childCount: options.length),
           ),
-        ],
-      ),
+        ),
+        // Extra padding at bottom for safety
+        const SliverToBoxAdapter(child: SizedBox(height: 40)),
+      ],
     );
   }
 

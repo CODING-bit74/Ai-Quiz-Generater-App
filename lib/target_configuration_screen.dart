@@ -1,12 +1,23 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
+import 'screens/credit_history_screen.dart';
+import 'screens/earn_credits_screen.dart';
 import 'package:intl/intl.dart';
 import 'controllers/quiz_controller.dart';
 import 'controllers/history_controller.dart';
+import 'controllers/economy_controller.dart';
 import 'quiz_screen.dart';
 import 'performance_lab_screen.dart';
+import 'services/auth_service.dart';
+import 'welcome_screen.dart';
+
+import 'youtube_input_screen.dart';
+import 'leaderboard_screen.dart';
+import 'screens/auth/goal_selection_screen.dart';
+import 'screens/syllabus_screen.dart';
 
 class TargetConfigurationScreen extends StatelessWidget {
   const TargetConfigurationScreen({super.key});
@@ -14,6 +25,13 @@ class TargetConfigurationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final QuizController controller = Get.find<QuizController>();
+
+    // Onboarding Check: Redirect new users if no goal is set
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!controller.isGoalSet.value) {
+        Get.to(() => const GoalSelectionScreen());
+      }
+    });
     // Ensure HistoryController is available
     final HistoryController historyController =
         Get.isRegistered<HistoryController>()
@@ -59,9 +77,15 @@ class TargetConfigurationScreen extends StatelessWidget {
                         Icons.tune_rounded,
                       ),
                       const SizedBox(height: 20),
+                      _buildVideoStudioBanner(context),
+                      const SizedBox(height: 12),
+                      _buildHallOfFameBanner(context),
+                      const SizedBox(height: 20),
                       _buildInputMethodSelector(context, controller, isDark),
                       const SizedBox(height: 24),
                       _buildTargetExamSettings(context, controller, isDark),
+                      const SizedBox(height: 16),
+                      _buildSubjectSelector(context, controller, isDark),
                       const SizedBox(height: 16),
                       Obx(
                         () => _buildContentSource(context, controller, isDark),
@@ -98,13 +122,18 @@ class TargetConfigurationScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new,
+          // Replaced Back Button with Dashboard Icon since this is the Home Screen
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.dashboard_rounded,
               color: Colors.blue,
               size: 20,
             ),
-            onPressed: () => Navigator.pop(context),
           ),
           Text(
             "COMMAND CENTER",
@@ -115,16 +144,176 @@ class TargetConfigurationScreen extends StatelessWidget {
               letterSpacing: 2,
             ),
           ),
-          IconButton(
-            onPressed: () => Get.to(() => const PerformanceLabScreen()),
-            icon: Icon(
-              Icons.insights_rounded,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            tooltip: "Open Performance Vault",
+          Row(
+            children: [
+              IconButton(
+                onPressed: () => Get.to(() => const PerformanceLabScreen()),
+                icon: Icon(
+                  Icons.insights_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                tooltip: "Open Performance Vault",
+              ),
+              IconButton(
+                onPressed: () => _showLogoutDialog(context),
+                icon: Icon(
+                  Icons.logout_rounded,
+                  color: Colors.redAccent.withOpacity(0.8),
+                ),
+                tooltip: "Logout",
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+    Get.dialog(
+      BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutBack,
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: value,
+              child: Opacity(
+                opacity: value.clamp(0.0, 1.0),
+                child: Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF1E293B).withOpacity(0.85)
+                          : Colors.white.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(isDark ? 0.1 : 0.5),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.power_settings_new_rounded,
+                            size: 40,
+                            color: Colors.redAccent,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          "Abort Mission?",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Are you sure you want to terminate your current session at HQ?",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.7),
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () => Get.back(),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    side: BorderSide(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.1),
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  "CANCEL",
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.6),
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  await Get.find<AuthService>().signOut();
+                                  Get.offAll(() => const WelcomeScreen());
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: const Text(
+                                  "LOGOUT",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+      barrierColor: Colors.black.withOpacity(0.5),
     );
   }
 
@@ -211,46 +400,90 @@ class TargetConfigurationScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    "User Profile", // Could be dynamic name later
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
+                  const SizedBox(height: 4),
+                  Obx(() {
+                    final auth = Get.find<AuthService>();
+                    final email =
+                        auth.currentUser.value?.email ?? "Guest Commander";
+                    return Text(
+                      email, // Dynamic Name
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }),
                   const SizedBox(height: 12),
                   // Mini Stats
-                  Row(
-                    children: [
-                      _buildMiniStat(context, "$missionCount", "Missions"),
-                      const SizedBox(width: 16),
-                      Container(
-                        width: 1,
-                        height: 20,
-                        color: Colors.grey.withOpacity(0.3),
-                      ),
-                      const SizedBox(width: 16),
-                      Obx(
-                        () => _buildMiniStat(
-                          context,
-                          "${historyController.credits.value}",
-                          "Credits",
+                  // Mini Stats - Scrollable to prevent overflow
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    clipBehavior: Clip.none,
+                    child: Row(
+                      children: [
+                        _buildMiniStat(context, "$missionCount", "Missions"),
+                        const SizedBox(width: 16),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: Colors.grey.withOpacity(0.3),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Container(
-                        width: 1,
-                        height: 20,
-                        color: Colors.grey.withOpacity(0.3),
-                      ),
-                      const SizedBox(width: 16),
-                      _buildMiniStat(
-                        context,
-                        "${avgScore.toInt()}%",
-                        "Accuracy",
-                      ),
-                    ],
+                        const SizedBox(width: 16),
+                        GestureDetector(
+                          onTap: () =>
+                              Get.to(() => const CreditHistoryScreen()),
+                          child: Container(
+                            color: Colors.transparent,
+                            child: Obx(() {
+                              final EconomyController economyController =
+                                  Get.find();
+                              return _buildMiniStat(
+                                context,
+                                "${economyController.credits.value}",
+                                "Credits",
+                              );
+                            }),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => Get.to(() => EarnCreditsScreen()),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.amber,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.amberAccent,
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              size: 14,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: Colors.grey.withOpacity(0.3),
+                        ),
+                        const SizedBox(width: 16),
+                        _buildMiniStat(
+                          context,
+                          "${avgScore.toInt()}%",
+                          "Accuracy",
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -404,153 +637,238 @@ class TargetConfigurationScreen extends StatelessWidget {
     QuizController controller,
     bool isDark,
   ) {
+    return Obx(() {
+      if (!controller.isGoalSet.value) {
+        return _buildGoalActionCard(context);
+      }
+
+      return _buildSelectedGoalCard(context, controller, isDark);
+    });
+  }
+
+  Widget _buildGoalActionCard(BuildContext context) {
     return _buildGlassCard(
       context,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Exam Sector
-          _buildDropdownLabel(context, "Exam Sector / Category"),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: controller.examSectors.keys.map((sector) {
-                return Obx(() {
-                  bool isSelected = controller.selectedSector.value == sector;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(sector),
-                      selected: isSelected,
-                      onSelected: (val) {
-                        if (val) controller.setSector(sector);
-                      },
-                      backgroundColor: isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.black.withOpacity(0.05),
-                      selectedColor: Colors.blue[700],
-                      labelStyle: TextStyle(
-                        color: isSelected
-                            ? Colors.white
-                            : Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withOpacity(0.6),
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: isSelected
-                              ? Colors.blue
-                              : Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.1),
-                        ),
-                      ),
-                      showCheckmark: false,
-                    ),
-                  );
-                });
-              }).toList(),
+          const Icon(Icons.stars_rounded, color: Colors.amber, size: 48),
+          const SizedBox(height: 16),
+          const Text(
+            "CHOOSE YOUR TARGET",
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+              letterSpacing: 1.5,
             ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Select an exam goal to personalize your mission.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 20),
-
-          // Specific Exam
-          _buildDropdownLabel(context, "Specific Goal"),
-          const SizedBox(height: 8),
-          _buildDropdownContainer(
-            context,
-            isDark,
-            Obx(
-              () => DropdownButton<String>(
-                value: controller.selectedExam.value,
-                isExpanded: true,
-                dropdownColor: Theme.of(context).cardColor,
-                underline: const SizedBox(),
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.blue),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-                items: controller.examSectors[controller.selectedSector.value]!
-                    .map(
-                      (exam) =>
-                          DropdownMenuItem(value: exam, child: Text(exam)),
-                    )
-                    .toList(),
-                onChanged: (val) => controller.setExam(val!),
+          ElevatedButton(
+            onPressed: () => Get.to(() => const GoalSelectionScreen()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
+              minimumSize: const Size(double.infinity, 50),
             ),
+            child: const Text("SET YOUR GOAL"),
           ),
-
-          // Subject Focus (Only for Topic mode)
-          Obx(() {
-            if (controller.selectedType.value != 'Topic')
-              return const SizedBox.shrink();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                _buildDropdownLabel(context, "Subject Focus"),
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: controller.subjects.map((subject) {
-                      return Obx(() {
-                        bool isSelected =
-                            controller.selectedSubject.value == subject;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(subject),
-                            selected: isSelected,
-                            onSelected: (val) {
-                              if (val) controller.setSubject(subject);
-                            },
-                            backgroundColor: isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.05),
-                            selectedColor: Colors.purple[700],
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withOpacity(0.6),
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? Colors.purple
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withOpacity(0.1),
-                              ),
-                            ),
-                            showCheckmark: false,
-                          ),
-                        );
-                      });
-                    }).toList(),
-                  ),
-                ),
-              ],
-            );
-          }),
         ],
       ),
     );
+  }
+
+  Widget _buildSelectedGoalCard(
+    BuildContext context,
+    QuizController controller,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [Colors.blue.withOpacity(0.2), Colors.blue.withOpacity(0.05)]
+              : [Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.02)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.track_changes_outlined,
+                  color: Colors.blue,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                "ACTIVE TARGET",
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  letterSpacing: 2,
+                  color: Colors.blue,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => Get.to(() => const GoalSelectionScreen()),
+                child: const Text(
+                  "CHANGE",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            controller.selectedSector.value.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            controller.selectedExam.value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // View Intelligence Button
+          InkWell(
+            onTap: () => Get.to(() => const SyllabusScreen()),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.withOpacity(0.2)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.auto_awesome_outlined,
+                    size: 16,
+                    color: Colors.blue,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    "VIEW EXAM INTELLIGENCE",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.blue,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubjectSelector(
+    BuildContext context,
+    QuizController controller,
+    bool isDark,
+  ) {
+    return Obx(() {
+      if (controller.selectedType.value != 'Topic') {
+        return const SizedBox.shrink();
+      }
+
+      return _buildGlassCard(
+        context,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDropdownLabel(context, "Subject Focus"),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              child: Row(
+                children: controller.subjects.map((subject) {
+                  return Obx(() {
+                    bool isSelected =
+                        controller.selectedSubject.value == subject;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(subject),
+                        selected: isSelected,
+                        onSelected: (val) {
+                          if (val) controller.setSubject(subject);
+                        },
+                        backgroundColor: isDark
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.black.withOpacity(0.05),
+                        selectedColor: Colors.purple[700],
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: isSelected
+                                ? Colors.purple
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.1),
+                          ),
+                        ),
+                        showCheckmark: false,
+                      ),
+                    );
+                  });
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildContentSource(
@@ -767,80 +1085,97 @@ class TargetConfigurationScreen extends StatelessWidget {
   }
 
   Widget _buildGenerateButton(BuildContext context, QuizController controller) {
-    return GestureDetector(
-      onTap: () {
-        // Validation logic
-        if (controller.selectedType.value == 'Link' ||
-            controller.selectedType.value == 'Text') {
-          if (controller.inputController.text.trim().isEmpty) {
-            Get.snackbar(
-              'Missing Content',
-              'Please enter text or a link.',
-              backgroundColor: Colors.orangeAccent,
-              colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM,
-            );
-            return;
-          }
-        }
-        if (controller.selectedType.value == 'Document') {
-          if (controller.pickedFilePath.value == null ||
-              controller.pickedFilePath.value!.isEmpty) {
-            Get.snackbar(
-              'No Document',
-              'Please upload a PDF.',
-              backgroundColor: Colors.orangeAccent,
-              colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM,
-            );
-            return;
-          }
-        }
+    final EconomyController economyController = Get.find();
 
-        controller.generateQuiz();
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const QuizScreen()),
-        );
-      },
-      child: Container(
-        height: 60,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.blue.withOpacity(0.4),
-              blurRadius: 20,
-              spreadRadius: 2,
-              offset: const Offset(0, 4),
+    return Obx(() {
+      // Calculate Cost dynamically
+      int cost = controller.selectedType.value == 'Topic' ? 10 : 20;
+
+      return InkWell(
+        onTap: () async {
+          if (controller.isLoading.value) return;
+
+          // 1. Validate Credits
+          bool success = await economyController.deductCredits(cost);
+          if (!success) return;
+
+          // 2. Validate Inputs
+          if (controller.selectedType.value == 'Link' ||
+              controller.selectedType.value == 'Text') {
+            if (controller.inputController.text.trim().isEmpty) {
+              Get.snackbar(
+                'Missing Content',
+                'Please enter text or a link.',
+                backgroundColor: Colors.orangeAccent,
+                colorText: Colors.white,
+                snackPosition: SnackPosition.BOTTOM,
+              );
+              return;
+            }
+          }
+          if (controller.selectedType.value == 'Document') {
+            if (controller.pickedFilePath.value == null ||
+                controller.pickedFilePath.value!.isEmpty) {
+              Get.snackbar(
+                'No Document',
+                'Please upload a PDF.',
+                backgroundColor: Colors.orangeAccent,
+                colorText: Colors.white,
+                snackPosition: SnackPosition.BOTTOM,
+              );
+              return;
+            }
+          }
+          if (controller.selectedType.value == 'Topic' &&
+              controller.selectedTopic.value.isEmpty) {
+            Get.snackbar("Error", "Please select or enter a topic");
+            return;
+          }
+
+          // 3. Generate
+          controller.generateQuiz();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const QuizScreen()),
+          );
+        },
+        child: Container(
+          height: 60,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
             ),
-          ],
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.rocket_launch_rounded, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              "INITIATE MISSION",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.4),
+                blurRadius: 20,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.rocket_launch_rounded, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                "INITIATE MISSION (-$cost 💎)",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
-
-  // --- 3. RECENT ACTIVITY ---
 
   Widget _buildRecentActivity(
     BuildContext context,
@@ -1110,6 +1445,144 @@ class TargetConfigurationScreen extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildVideoStudioBanner(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Get.to(() => const YouTubeInputScreen()),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [Colors.redAccent.shade700, Colors.redAccent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.redAccent.withOpacity(0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Video Studio",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    "Generate quizzes directly from YouTube videos",
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white70,
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHallOfFameBanner(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Get.to(() => const LeaderboardScreen()),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [Colors.amber.shade700, Colors.amber],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.amber.withOpacity(0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.emoji_events_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Hall of Fame",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    "Check the top ranked commanders",
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white70,
+              size: 16,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
