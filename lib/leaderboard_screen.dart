@@ -13,9 +13,6 @@ class LeaderboardScreen extends StatelessWidget {
     final HistoryController controller = Get.find<HistoryController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Refresh history to ensure latest scores
-    controller.loadHistory();
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(

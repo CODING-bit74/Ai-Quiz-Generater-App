@@ -4,8 +4,19 @@ import 'package:test_project/welcome_screen.dart';
 import 'controllers/theme_controller.dart';
 import 'controllers/history_controller.dart';
 import 'controllers/quiz_controller.dart';
+import 'controllers/economy_controller.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'services/auth_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://kymemcfwjgliytgdzwrc.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5bWVtY2Z3amdsaXl0Z2R6d3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwOTk0NDksImV4cCI6MjA4NjY3NTQ0OX0.Tf49SZ0MOiKqtgAfNmNO9A_N_l6tbSz3AOI7OkXbJfs',
+  );
+
   runApp(const MyApp());
 }
 
@@ -17,7 +28,9 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       initialBinding: BindingsBuilder(() {
         Get.put(ThemeController());
+        Get.put(AuthService());
         Get.put(HistoryController());
+        Get.put(EconomyController());
         Get.put(
           QuizController(),
         ); // Also making QuizController global for easy access

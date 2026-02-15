@@ -512,7 +512,7 @@ class PerformanceLabScreen extends StatelessWidget {
   void _confirmDelete(
     BuildContext context,
     HistoryController controller,
-    int id,
+    String id,
   ) {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
     Get.dialog(

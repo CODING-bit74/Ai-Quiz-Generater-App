@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'package:flutter/services.dart'; // For Clipboard
 import 'quiz_screen.dart'; // Ensure this import exists for navigation
 import 'controllers/quiz_controller.dart'; // Ensure this import exists
+import 'controllers/economy_controller.dart';
+import 'screens/auth/goal_selection_screen.dart';
 
 class YouTubeInputScreen extends StatefulWidget {
   const YouTubeInputScreen({super.key});
@@ -142,6 +144,17 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
       return;
     }
 
+    // Credit Check (Premium Feature)
+    final EconomyController economyController = Get.find();
+
+    // We need to await the deduction, so make this function async or handle future
+    _processGeneration(economyController);
+  }
+
+  Future<void> _processGeneration(EconomyController economyController) async {
+    bool success = await economyController.deductCredits(20);
+    if (!success) return;
+
     // Call the controller to generate quiz (FIRE AND FORGET)
     // We do NOT await here so that we can navigate immediately to the QuizScreen
     // which displays the "AI Loading / Thinking" state.
@@ -159,6 +172,13 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Onboarding Check: Redirect new users if no goal is set
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_quizController.isGoalSet.value) {
+        Get.to(() => const GoalSelectionScreen());
+      }
+    });
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -316,6 +336,15 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                         ),
                       ),
                       const SizedBox(height: 50),
+
+                      // Target Goal Configuration
+                      _buildTargetExamSettings(
+                        context,
+                        _quizController,
+                        isDark,
+                      ),
+
+                      const SizedBox(height: 24),
 
                       // Glassmorphic Input Card
                       Container(
@@ -485,7 +514,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                                       ),
                                       SizedBox(width: 12),
                                       Text(
-                                        "GENERATE QUIZ",
+                                        "GENERATE QUIZ (-20 💎)",
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
@@ -506,6 +535,163 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTargetExamSettings(
+    BuildContext context,
+    QuizController controller,
+    bool isDark,
+  ) {
+    return Obx(() {
+      if (!controller.isGoalSet.value) {
+        return _buildGoalActionCard(context);
+      }
+
+      return _buildSelectedGoalCard(context, controller, isDark);
+    });
+  }
+
+  Widget _buildGoalActionCard(BuildContext context) {
+    return _buildGlassCard(
+      context,
+      child: Column(
+        children: [
+          const Icon(Icons.stars_rounded, color: Colors.amber, size: 48),
+          const SizedBox(height: 16),
+          const Text(
+            "CHOOSE YOUR TARGET",
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Select an exam goal to personalize your mission.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => Get.to(() => const GoalSelectionScreen()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              minimumSize: const Size(double.infinity, 50),
+            ),
+            child: const Text("SET YOUR GOAL"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedGoalCard(
+    BuildContext context,
+    QuizController controller,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [Colors.blue.withOpacity(0.2), Colors.blue.withOpacity(0.05)]
+              : [Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.02)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.track_changes_outlined,
+                  color: Colors.blue,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                "ACTIVE TARGET",
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  letterSpacing: 2,
+                  color: Colors.blue,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => Get.to(() => const GoalSelectionScreen()),
+                child: const Text(
+                  "CHANGE",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            controller.selectedSector.value.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            controller.selectedExam.value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlassCard(BuildContext context, {required Widget child}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor.withOpacity(isDark ? 0.3 : 0.6),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }

@@ -13,3 +13,5 @@ pinecone-client
 langchain-pinecone
 pypdf
 youtube-transcript-api
+supabase
+gotrue

@@ -5,12 +5,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/history_model.dart';
 import '../services/database_service.dart';
 import 'history_controller.dart';
 import '../data/loading_tips.dart';
+import '../models/exam_management_models.dart'; // Import Models
+import '../services/auth_service.dart';
 import 'dart:math';
 
 class QuizController extends GetxController {
@@ -37,6 +40,8 @@ class QuizController extends GetxController {
   var selectedSector = 'Banking'.obs;
   // Target Configuration: Specific exam within the sector (e.g., IBPS PO)
   var selectedExam = 'IBPS PO'.obs;
+  // Tracks if the user has a finalized goal selected
+  final RxBool isGoalSet = false.obs;
   // Target Configuration: Subject focus (e.g., Quant, English)
   var selectedSubject = 'Quant'.obs;
   // Target Configuration: Pre-defined specific topic based on subject
@@ -86,7 +91,9 @@ class QuizController extends GetxController {
   // --- DATA MAPS (CORE CONFIGURATION) ---
 
   // Mapping of main exam sectors to their specific common exams
-  final Map<String, List<String>> examSectors = {
+  // Mapping of main exam sectors to their specific common exams
+  // NOW OBSERVABLE for dynamic updates
+  var examSectors = <String, List<String>>{
     'Banking': ['IBPS PO', 'SBI PO', 'RBI Grade B', 'IBPS Clerk'],
     'SSC': ['SSC CGL', 'SSC CHSL', 'SSC MTS', 'SSC GD'],
     'UPSC': ['CSE (IAS)', 'CDS', 'CAPF', 'EPFO'],
@@ -95,7 +102,11 @@ class QuizController extends GetxController {
     'Teaching': ['CTET', 'UGC NET', 'KVS'],
     'State PSC': ['UPPSC', 'BPSC', 'MPSC', 'RAS'],
     'Police': ['Delhi Police', 'UP Police', 'Bihar Police'],
-  };
+  }.obs;
+
+  // --- NEW STRUCTURED DATA FOR GOAL SELECTION ---
+  var availableSectors = <ExamSector>[].obs;
+  var availableExams = <Exam>[].obs;
 
   // Standard subjects available for all exam modes
   final List<String> subjects = ['Quant', 'Reasoning', 'English', 'GA/GS'];
@@ -138,12 +149,173 @@ class QuizController extends GetxController {
   ];
 
   @override
+  void onInit() {
+    super.onInit();
+    _fetchExamData();
+
+    // Listen for Auth Changes to refresh user goal for new users
+    ever(AuthService.to.currentUser, (_) {
+      debugPrint("QuizController: Auth state changed, refreshing user goal...");
+      _loadUserGoal();
+    });
+  }
+
+  @override
   void onClose() {
     // Cleanup timers and controllers to prevent memory leaks
     _questionTimer?.cancel();
     _logoTimer?.cancel();
     inputController.dispose();
     super.onClose();
+  }
+
+  /// Fetches Exam Sectors and Exams from Supabase
+  Future<void> _fetchExamData() async {
+    try {
+      final supabase = Supabase.instance.client;
+
+      // 1. Fetch Sectors
+      final sectorsResponse = await supabase
+          .from('sectors')
+          .select()
+          .order('name', ascending: true);
+
+      final List<dynamic> localSectors = sectorsResponse as List;
+
+      // 2. Fetch all exams (optimized: fetch all and group locally)
+      final examsResponse = await supabase
+          .from('exams')
+          .select()
+          .order('exam_name', ascending: true);
+
+      final List<dynamic> localExams = examsResponse as List;
+
+      // --- POPULATE STRUCTURED LISTS ---
+      availableSectors.assignAll(
+        localSectors.map((e) => ExamSector.fromMap(e)).toList(),
+      );
+      availableExams.assignAll(localExams.map((e) => Exam.fromMap(e)).toList());
+
+      // 3. Build Map
+      Map<String, List<String>> newMap = {};
+
+      for (var sector in localSectors) {
+        String sectorName = sector['name'];
+        String sectorId = sector['id']; // UUID (String)
+
+        List<String> examsInSector = localExams
+            .where((e) => e['sector_id'] == sectorId)
+            .map<String>((e) => e['exam_name'] as String)
+            .toList();
+
+        if (examsInSector.isNotEmpty) {
+          newMap[sectorName] = examsInSector;
+        } else {
+          newMap[sectorName] = [];
+        }
+      }
+
+      if (newMap.isNotEmpty) {
+        examSectors.assignAll(newMap);
+
+        // 4. Load User's Saved Goal
+        await _loadUserGoal();
+
+        // Reset selections if current invalid
+        if (examSectors.isNotEmpty) {
+          if (!examSectors.containsKey(selectedSector.value)) {
+            selectedSector.value = examSectors.keys.first;
+            final exams = examSectors[selectedSector.value];
+            selectedExam.value = (exams != null && exams.isNotEmpty)
+                ? exams.first
+                : '';
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching dynamic exams: $e");
+    }
+  }
+
+  /// Loads the user's saved goal from Supabase Profile
+  Future<void> _loadUserGoal() async {
+    try {
+      final userId = AuthService.to.userId;
+      if (userId == null) {
+        isGoalSet.value = false;
+        return;
+      }
+
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select('target_exam_id')
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (response != null && response['target_exam_id'] != null) {
+        String examId = response['target_exam_id']; // UUID
+
+        // Find the exam object
+        try {
+          final exam = availableExams.firstWhere((e) => e.id == examId);
+          final sector = availableSectors.firstWhere(
+            (s) => s.id == exam.sectorId,
+          );
+
+          selectedSector.value = sector.name;
+          selectedExam.value = exam.name;
+          isGoalSet.value = true;
+          debugPrint("Loaded User Goal: ${sector.name} -> ${exam.name}");
+        } catch (e) {
+          isGoalSet.value = false;
+          debugPrint("Saved exam/sector not found in current list.");
+        }
+      } else {
+        isGoalSet.value = false;
+      }
+    } catch (e) {
+      isGoalSet.value = false;
+      debugPrint("Error loading user goal: $e");
+    }
+  }
+
+  /// Saves the user's selected goal (Sector + Exam) to their profile
+  Future<void> setUserGoal(Exam exam) async {
+    try {
+      final userId = AuthService.to.userId;
+      if (userId == null) return;
+
+      // 1. Update Supabase Profile
+      await Supabase.instance.client
+          .from('profiles')
+          .update({
+            'target_exam_id': exam.id, // UUID
+            // 'selected_sector_id': exam.sectorId, // Removed as per new schema
+          })
+          .eq('id', userId);
+
+      // 2. Update Local Controller State
+      final sector = availableSectors.firstWhere(
+        (s) => s.id == exam.sectorId,
+        orElse: () =>
+            ExamSector(id: 'unknown', name: selectedSector.value), // Fallback
+      );
+
+      selectedSector.value = sector.name;
+      selectedExam.value = exam.name;
+      isGoalSet.value = true;
+
+      Get.snackbar(
+        "Goal Updated",
+        "Target set to ${exam.name}",
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      debugPrint("Error saving user goal: $e");
+      Get.snackbar("Error", "Failed to save goal.");
+    }
   }
 
   // --- ACTIONS (UI CALLBACKS) ---
@@ -154,14 +326,24 @@ class QuizController extends GetxController {
   // Updates sector and resets the exam selection to the first child of that sector
   void setSector(String sector) {
     selectedSector.value = sector;
-    selectedExam.value = examSectors[sector]!.first;
+    final exams = examSectors[sector];
+    if (exams != null && exams.isNotEmpty) {
+      selectedExam.value = exams.first;
+    } else {
+      selectedExam.value = '';
+    }
   }
 
   // Simple setters for configuration state
   void setExam(String exam) => selectedExam.value = exam;
   void setSubject(String subject) {
     selectedSubject.value = subject;
-    selectedTopic.value = subjectTopics[subject]!.first;
+    final topics = subjectTopics[subject];
+    if (topics != null && topics.isNotEmpty) {
+      selectedTopic.value = topics.first;
+    } else {
+      selectedTopic.value = '';
+    }
   }
 
   void setTopic(String topic) => selectedTopic.value = topic;
@@ -219,6 +401,13 @@ class QuizController extends GetxController {
         'POST',
         Uri.parse('$baseUrl/upload_document'),
       );
+
+      // Add Auth Header
+      final token = AuthService.to.accessToken;
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+
       request.files.add(
         await http.MultipartFile.fromPath('file', pickedFilePath.value!),
       );
@@ -309,9 +498,15 @@ class QuizController extends GetxController {
       loadingMessage.value = "GENERATING QUESTIONS...";
 
       // Send all configuration preferences to the backend
+      final token = AuthService.to.accessToken;
+      final headers = {'Content-Type': 'application/json'};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: jsonEncode({
           'topic': type == 'Topic'
               ? selectedTopic.value
@@ -339,7 +534,14 @@ class QuizController extends GetxController {
           _showPlaygroundTransition();
         }
       } else {
-        errorMessage.value = 'Failed: ${response.statusCode}\n${response.body}';
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage.value =
+              errorData['error'] ?? 'Error: ${response.statusCode}';
+        } catch (e) {
+          errorMessage.value =
+              'Failed: ${response.statusCode}\n${response.body}';
+        }
       }
     } catch (e) {
       errorMessage.value = 'Error: $e';
@@ -450,6 +652,8 @@ class QuizController extends GetxController {
   Future<void> _saveResultToHistory() async {
     try {
       final result = QuizResult(
+        id: "MIS-${DateTime.now().millisecondsSinceEpoch}",
+        userId: Get.find<AuthService>().userId,
         topic: selectedType.value == 'Topic'
             ? selectedTopic.value
             : (detectedTopic.value ??
@@ -466,6 +670,9 @@ class QuizController extends GetxController {
         quizDataJson: jsonEncode(questions),
       );
       await DatabaseService.instance.insertResult(result);
+
+      // Update User Progress in Supabase
+      await DatabaseService.instance.updateExamProgress(selectedExam.value, 1);
 
       // Refresh history if controller exists
       if (Get.isRegistered<HistoryController>()) {

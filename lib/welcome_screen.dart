@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:test_project/target_configuration_screen.dart';
-import 'package:test_project/leaderboard_screen.dart'; // Import LeaderboardScreen
 import 'controllers/theme_controller.dart';
 import 'controllers/history_controller.dart';
-import 'youtube_input_screen.dart'; // Add import for YouTubeInputScreen
+import 'controllers/economy_controller.dart';
+
+import 'services/auth_service.dart';
+import 'screens/auth_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -60,20 +62,64 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   Widget build(BuildContext context) {
     final ThemeController themeController = Get.find();
     final HistoryController historyController = Get.find();
+    final EconomyController economyController = Get.find();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildLeaderboardButton(context),
-          const SizedBox(height: 16),
-          _buildThemeToggle(context, themeController),
-        ],
+        children: [_buildThemeToggle(context, themeController)],
       ),
       body: Stack(
         children: [
+          // Credit Badge (Top Right)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: 20,
+            child: Obx(
+              () => Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "${economyController.credits.value}",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           // Background Mesh Gradient Effect
           AnimatedBuilder(
             animation: _controller1,
@@ -346,32 +392,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           },
                           child: GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  transitionDuration: const Duration(
-                                    milliseconds: 500,
-                                  ),
-                                  pageBuilder:
-                                      (
-                                        context,
-                                        animation,
-                                        secondaryAnimation,
-                                      ) => const TargetConfigurationScreen(),
-                                  transitionsBuilder:
-                                      (
-                                        context,
-                                        animation,
-                                        secondaryAnimation,
-                                        child,
-                                      ) {
-                                        return FadeTransition(
-                                          opacity: animation,
-                                          child: child,
-                                        );
-                                      },
-                                ),
-                              );
+                              final AuthService auth = Get.find();
+                              if (auth.isLoggedIn) {
+                                Get.offAll(
+                                  () => const TargetConfigurationScreen(),
+                                );
+                              } else {
+                                Get.to(() => const AuthScreen());
+                              }
                             },
                             child: Container(
                               height: 60,
@@ -417,62 +445,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         ),
                       ),
 
-                      const SizedBox(height: 16),
-
-                      // Secondary CTA: YouTube Quiz
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: const Duration(milliseconds: 900),
-                          builder: (context, value, child) {
-                            return Opacity(
-                              opacity: value.clamp(0.0, 1.0),
-                              child: Transform.translate(
-                                offset: Offset(0, 20 * (1 - value)),
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: GestureDetector(
-                            onTap: () =>
-                                Get.to(() => const YouTubeInputScreen()),
-                            child: Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.red.withOpacity(0.3),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.video_library_rounded,
-                                    color: Colors.redAccent,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    "GENERATE FROM YOUTUBE",
-                                    style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
                       const SizedBox(height: 40),
                       Text(
                         "Powered by 🌟StarAppAi",
@@ -492,91 +464,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLeaderboardButton(BuildContext context) {
-    // We can reuse the existing controller for a subtle pulse or create a local one.
-    // Let's use a TweenAnimationBuilder for a self-running pulse effect on the shadow.
-    final HistoryController historyController = Get.find();
-
-    return GestureDetector(
-      onTap: () => Get.to(() => const LeaderboardScreen()),
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 1.0, end: 1.1),
-        duration: const Duration(seconds: 1),
-        curve: Curves.easeInOut,
-        builder: (context, scale, child) {
-          return Transform.scale(
-            scale: scale,
-            child: Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withOpacity(0.6),
-                    blurRadius: 20 * scale, // Animate blur
-                    spreadRadius: 2 * scale, // Animate spread
-                  ),
-                ],
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.6),
-                  width: 3,
-                ),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Icon(
-                    Icons.emoji_events_rounded,
-                    color: Colors.white,
-                    size: 36,
-                  ),
-                  // Rank Badge
-                  Positioned(
-                    top: -2,
-                    right: 12,
-                    child: Obx(() {
-                      if (historyController.history.isEmpty)
-                        return const SizedBox.shrink();
-                      // Find user's rank - for now, just show a "star" or "1" if they are top.
-                      // Since we don't have auth/user ID easily matchable to history yet in this context without scanning,
-                      // we'll just show a "notification dot" to incite curiosity, or the "Best Rank".
-                      return Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                        child: const Icon(
-                          Icons.priority_high,
-                          size: 10,
-                          color: Colors.white,
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-        onEnd: () {
-          // This is a simple ping-pong loop hack for TweenAnimationBuilder
-          // But purely stateless widgets can't easily loop without setState.
-          // Since we are in a StatefulWidget, we could use a controller.
-          // However, for a quick "interactive" feel, let's stick to the hover/press feedback
-          // or just link it to the existing _controller1 which is already looping.
-        },
       ),
     );
   }
