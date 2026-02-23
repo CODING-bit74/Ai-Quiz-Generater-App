@@ -217,6 +217,26 @@ class DatabaseService {
 
   /// Get last bonus date
   Future<String?> getLastBonusDate() async {
+    // 1. Try Supabase if logged in
+    try {
+      final auth = Get.find<AuthService>();
+      if (auth.isLoggedIn) {
+        final userId = auth.userId;
+        final response = await Supabase.instance.client
+            .from('profiles')
+            .select('last_daily_bonus')
+            .eq('id', userId!)
+            .maybeSingle();
+
+        if (response != null) {
+          return response['last_daily_bonus'] as String?;
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print("Supabase bonus fetch error: $e");
+    }
+
+    // 2. Fallback to Local DB
     final db = await instance.database;
     final result = await db.query(
       'user_profile',
@@ -232,6 +252,21 @@ class DatabaseService {
 
   /// Update last bonus date
   Future<void> updateBonusDate(String date) async {
+    // 1. Update Supabase if logged in
+    try {
+      final auth = Get.find<AuthService>();
+      if (auth.isLoggedIn) {
+        final userId = auth.userId;
+        await Supabase.instance.client
+            .from('profiles')
+            .update({'last_daily_bonus': date})
+            .eq('id', userId!);
+      }
+    } catch (e) {
+      if (kDebugMode) print("Supabase bonus update error: $e");
+    }
+
+    // 2. Always update Local DB
     final db = await instance.database;
     await db.update(
       'user_profile',

@@ -2,27 +2,31 @@
 from flask import Flask, request, jsonify
 # Knowledge base and generation logic
 from rag_service import RAGService, TranscriptNotFoundError
+from agentic_service import QuizAgent  # Import the new Agent
+
 import os
-
-# Initialize the Flask application
-app = Flask(__name__)
-
-# Initialize RAG Service global instance
-# This service handles all vector DB interactions and LLM calls
-rag_service = None
-
-# --- SUPABASE AUTHENTICATION ---
-from supabase import create_client, Client
 from functools import wraps
-import os
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
 # Load environment variables
 load_dotenv()
 
+# Initialize the Flask application
+app = Flask(__name__)
+
+# Initialize Global Instances
+rag_service = None # Kept for direct document/text adding
+quiz_agent = None  # The new brain for generation
+
+# --- SUPABASE AUTHENTICATION ---
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
-supabase: Client = create_client(url, key)
+try:
+    supabase: Client = create_client(url, key)
+except Exception as e:
+    print(f"Warning: Supabase client failed to initialize: {e}")
+    supabase = None
 
 def verify_token(f):
     @wraps(f)
@@ -34,10 +38,10 @@ def verify_token(f):
         try:
             # Expecting 'Bearer <token>'
             token = auth_header.split(" ")[1]
-            user = supabase.auth.get_user(token)
-            if not user:
-                 return jsonify({"error": "Invalid Token"}), 401
-            # You can inject user info into request if needed, e.g., request.user = user
+            if supabase:
+                user = supabase.auth.get_user(token)
+                if not user:
+                     return jsonify({"error": "Invalid Token"}), 401
         except Exception as e:
             return jsonify({"error": f"Authentication Failed: {str(e)}"}), 401
             
@@ -105,10 +109,10 @@ def upload_document():
 @app.route('/generate_quiz', methods=['POST'])
 @verify_token
 def generate_quiz():
-    """Main endpoint to generate a quiz based on various input parameters."""
-    global rag_service
-    if not rag_service:
-        return jsonify({"error": "RAG Service not initialized. Check API Key."}), 500
+    """Main endpoint to generate a quiz using the Agentic Workflow."""
+    global quiz_agent
+    if not quiz_agent:
+        return jsonify({"error": "Quiz Agent not initialized. Check API Key."}), 500
 
     # Parse JSON data from the request body
     data = request.json
@@ -119,18 +123,18 @@ def generate_quiz():
     input_type = data.get('input_type', 'topic') # topic, text, link, or document
     language = data.get('language', 'English')
     
-    # Target Configuration parameters (Specific to Indian Exam use case)
+    # Target Configuration parameters
     exam_sector = data.get('exam_sector')
     exam_name = data.get('exam_name')
     subject = data.get('subject')
     
-    # Validation: A topic or content source is mandatory
+    # Validation
     if not topic:
         return jsonify({"error": "No topic or content provided"}), 400
         
     try:
-        # Step 1: Call the RAG service to generate the quiz JSON
-        quiz_json = rag_service.generate_quiz(
+        # Call the Agentic Service
+        quiz_json = quiz_agent.generate_quiz_agentic(
             topic, 
             num_questions=num_questions, 
             difficulty=difficulty, 
@@ -140,23 +144,27 @@ def generate_quiz():
             exam_name=exam_name,
             subject=subject
         )
-        # Step 2: Return the raw JSON string with correct Content-Type header
         return quiz_json, 200, {'Content-Type': 'application/json'}
     except TranscriptNotFoundError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         import traceback
-        traceback.print_exc() # Useful for debugging in the backend console
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 # Application Entry Point
 if __name__ == '__main__':
     try:
-        # Attempt to bootstrap the RAG service (connects to Pinecone/OpenAI)
+        # Initialize services
+        print("Initializing RAG Service...")
         rag_service = RAGService()
-        print("RAG Service Initialized Successfully")
-    except Exception as e:
-        print(f"Failed to initialize RAG Service: {e}")
         
-    # Start the Flask development server on port 5001
+        print("Initializing Quiz Agent...")
+        quiz_agent = QuizAgent()
+        
+        print("✅ Services Initialized Successfully")
+    except Exception as e:
+        print(f"❌ Failed to initialize Services: {e}")
+        
+    # Start the Flask development server
     app.run(host='0.0.0.0', port=5001, debug=True)

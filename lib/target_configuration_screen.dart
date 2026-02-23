@@ -91,6 +91,17 @@ class TargetConfigurationScreen extends StatelessWidget {
                         () => _buildContentSource(context, controller, isDark),
                       ),
                       const SizedBox(height: 16),
+
+                      // 4. AI TUTOR SELECTOR (NEW)
+                      _buildSectionHeader(
+                        context,
+                        "SELECT YOUR AI TUTOR",
+                        Icons.psychology_rounded,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildAgentSelector(context, controller, isDark),
+                      const SizedBox(height: 24),
+
                       _buildSessionPreferences(context, controller, isDark),
                       const SizedBox(height: 32),
                       _buildGenerateButton(context, controller),
@@ -369,7 +380,7 @@ class TargetConfigurationScreen extends StatelessWidget {
               ),
               child: ClipOval(
                 child: Image.asset(
-                  'assets/images/govprpeai_logo.png',
+                  Get.find<QuizController>().currentAvatarPath,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -403,16 +414,267 @@ class TargetConfigurationScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Obx(() {
                     final auth = Get.find<AuthService>();
-                    final email =
-                        auth.currentUser.value?.email ?? "Guest Commander";
-                    return Text(
-                      email, // Dynamic Name
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                    final user = auth.currentUser.value;
+                    final metadata = user?.userMetadata;
+                    String displayName = "Guest Commander";
+
+                    if (metadata != null && metadata['full_name'] != null) {
+                      displayName = metadata['full_name'];
+                    } else if (user?.email != null) {
+                      displayName = user!.email!.split('@')[0].toUpperCase();
+                    }
+
+                    // Get Controller for Active Target
+                    final quizController = Get.find<QuizController>();
+                    final targetExam = quizController.selectedExam.value;
+
+                    // Get Progress for this Target
+                    final rankTitle = historyController.getTargetRank(
+                      targetExam,
+                    );
+                    final progress = historyController.getTargetRankProgress(
+                      targetExam,
+                    );
+                    final missionsLeft = historyController
+                        .getTargetMissionsToNextRank(targetExam);
+
+                    Color rankColor = Colors.blueGrey;
+                    if (rankTitle == "LEGEND")
+                      rankColor = Colors.amber;
+                    else if (rankTitle == "MASTER")
+                      rankColor = Colors.purpleAccent;
+                    else if (rankTitle == "COMMANDER")
+                      rankColor = Colors.blue;
+                    else if (rankTitle == "OFFICER")
+                      rankColor = Colors.cyan;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                displayName, // Dynamic Name
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: rankColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: rankColor.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                rankTitle,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  color: rankColor,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Active Target Display
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.ads_click_rounded,
+                              size: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.5),
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                "${quizController.selectedSector.value} • ${targetExam}",
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Progress Bar
+                        const SizedBox(height: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 6,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.05),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  rankColor,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              missionsLeft > 0
+                                  ? "$missionsLeft missions to promotion"
+                                  : "Max Rank Achieved",
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontStyle: FontStyle.italic,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.4),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // --- DAILY MISSION UPDATE ---
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.03),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.05),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      "DAILY MISSION", // Shortened text
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                        letterSpacing: 0.5,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.local_fire_department,
+                                          size: 10,
+                                          color: Colors.orange,
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          "${historyController.dailyStreak} Day Streak",
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.orange,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value:
+                                            (historyController
+                                                        .quizzesDoneToday /
+                                                    3)
+                                                .clamp(0.0, 1.0),
+                                        minHeight: 6,
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.05),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.greenAccent,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "${historyController.quizzesDoneToday}/3",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                historyController.quizzesDoneToday >= 3
+                                    ? "Daily Target Achieved! 🎉"
+                                    : "Complete 3 quizzes to maintain streak",
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.4),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     );
                   }),
                   const SizedBox(height: 12),
@@ -563,7 +825,12 @@ class TargetConfigurationScreen extends StatelessWidget {
             Icons.auto_fix_high_rounded,
           ),
           const SizedBox(width: 8),
-          _buildTypeTab(context, controller, 'Text', Icons.smart_toy_rounded),
+          _buildTypeTab(
+            context,
+            controller,
+            'PYQ Search',
+            Icons.manage_search_rounded,
+          ),
           const SizedBox(width: 8),
           _buildTypeTab(context, controller, 'Document', Icons.memory_rounded),
         ],
@@ -821,7 +1088,7 @@ class TargetConfigurationScreen extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
               child: Row(
-                children: controller.subjects.map((subject) {
+                children: controller.availableSubjects.map((subject) {
                   return Obx(() {
                     bool isSelected =
                         controller.selectedSubject.value == subject;
@@ -934,7 +1201,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                               : Colors.white.withOpacity(0.5),
                           hintText: controller.selectedType.value == 'Link'
                               ? "Paste URL here..."
-                              : "Paste your text/notes here...",
+                              : "Enter topic/keyword for PYQ Search...",
                           hintStyle: TextStyle(
                             color: Theme.of(
                               context,
@@ -1101,11 +1368,11 @@ class TargetConfigurationScreen extends StatelessWidget {
 
           // 2. Validate Inputs
           if (controller.selectedType.value == 'Link' ||
-              controller.selectedType.value == 'Text') {
+              controller.selectedType.value == 'PYQ Search') {
             if (controller.inputController.text.trim().isEmpty) {
               Get.snackbar(
                 'Missing Content',
-                'Please enter text or a link.',
+                'Please enter a topic or a link.',
                 backgroundColor: Colors.orangeAccent,
                 colorText: Colors.white,
                 snackPosition: SnackPosition.BOTTOM,
@@ -1582,6 +1849,117 @@ class TargetConfigurationScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAgentSelector(
+    BuildContext context,
+    QuizController controller,
+    bool isDark,
+  ) {
+    final agents = [
+      {
+        'name': 'Professor',
+        'icon': '👨‍🏫',
+        'desc': 'Balanced & Academic',
+        'color': Colors.blue,
+      },
+      {
+        'name': 'Drill Sergeant',
+        'icon': '🎖️',
+        'desc': 'Strict & Fast-Paced',
+        'color': Colors.red,
+      },
+      {
+        'name': 'Study Buddy',
+        'icon': '🤝',
+        'desc': 'Fun & Encouraging',
+        'color': Colors.green,
+      },
+    ];
+
+    return SizedBox(
+      height: 140,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: agents.length,
+        separatorBuilder: (ctx, i) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final agent = agents[index];
+          final name = agent['name'] as String;
+          final color = agent['color'] as Color;
+          final desc = agent['desc'] as String;
+          final icon = agent['icon'] as String;
+
+          return Obx(() {
+            final isSelected = controller.selectedAgentPersona.value == name;
+            return InkWell(
+              onTap: () => controller.selectedAgentPersona.value = name,
+              borderRadius: BorderRadius.circular(20),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: 140,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? color.withOpacity(0.15)
+                      : (isDark
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.white.withOpacity(0.6)),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected
+                        ? color
+                        : (isDark ? Colors.white10 : Colors.black12),
+                    width: isSelected ? 2 : 1,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: color.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(icon, style: const TextStyle(fontSize: 32)),
+                    const SizedBox(height: 12),
+                    Text(
+                      name,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isSelected
+                            ? (isDark ? Colors.white : Colors.black)
+                            : Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.8),
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      desc,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          });
+        },
       ),
     );
   }

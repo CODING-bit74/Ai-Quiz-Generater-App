@@ -481,83 +481,107 @@ Return ONLY the JSON. No conversational text.
             return ""
 
     def _fetch_youtube_transcript(self, url: str) -> str:
-        """Fetches the transcript of a YouTube video."""
+        """Fetches the transcript of a YouTube video with standard API methods."""
         try:
-            # Extract video ID
-            video_id = None
-            if "youtube.com/watch?v=" in url:
-                video_id = url.split("v=")[1].split("&")[0]
-            elif "youtu.be/" in url:
-                video_id = url.split("youtu.be/")[1].split("?")[0]
-            elif "youtube.com/live/" in url:
-                video_id = url.split("live/")[1].split("?")[0]
+            # Enhanced video ID extraction regex (Supports watch, embed, live, youtu.be)
+            regex = r"(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^\"&?\/\s]{11})"
+            match = re.search(regex, url)
+            video_id = match.group(1) if match else None
             
             if not video_id:
-                print("Could not extract video ID from URL")
+                # Manual fallback check
+                if "v=" in url:
+                    video_id = url.split("v=")[1].split("&")[0]
+                elif "youtu.be/" in url:
+                    video_id = url.split("youtu.be/")[1].split("?")[0]
+                elif "/live/" in url:
+                    video_id = url.split("/live/")[1].split("?")[0]
+            
+            if not video_id:
+                print("❌ Could not extract video ID from URL")
                 return ""
 
-            print(f"Fetching transcript for video ID: {video_id}")
+            print(f"🎬 [YOUTUBE] video_id: {video_id}")
             
-            print(f"Fetching transcript for video ID: {video_id}")
-            
-            # Instantiate the API class
             try:
-                # Based on installed package inspection, this class requires instantiation
+                # IMPORTANT: Some versions of this library require instantiation
                 yt_api = YouTubeTranscriptApi()
                 
-                # Use the .fetch() instance method which wraps list().find().fetch()
-                transcript_list = yt_api.fetch(
-                    video_id, 
-                    languages=['en', 'hi', 'en-IN', 'hi-IN']
-                )
+                # 1. Try listing transcripts to find best match
+                try:
+                    # Try instance method first (based on current inspection)
+                    transcript_list = yt_api.list(video_id)
+                except AttributeError:
+                    # Fallback to class method if it somehow exists but wasn't in dir
+                    try:
+                        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                    except:
+                        # Final fallback: Class-level list
+                        transcript_list = YouTubeTranscriptApi.list(video_id)
                 
-                # Extract text
-                # The fetch method returns a FetchedTranscript object which is iterable
-                # Each item is a FetchedTranscriptSnippet object with .text attribute
-                full_text = ""
-                for item in transcript_list:
+                # 2. Prefer manually created, then auto, priority languages
+                try:
+                    transcript = transcript_list.find_transcript(['en', 'hi', 'en-IN', 'hi-IN'])
+                except:
+                    # Fallback to any English or Hindi then first available
+                    try:
+                        transcript = transcript_list.find_generated_transcript(['en', 'hi'])
+                    except:
+                        # Handle different return types
+                        try:
+                            transcript = next(iter(transcript_list))
+                        except:
+                            # Try one last direct search
+                            transcript = transcript_list.find_transcript(['en', 'hi'])
+                
+                data = transcript.fetch()
+                
+                # Robust extraction: handle both objects with .text and dicts with ['text']
+                full_text_parts = []
+                for item in data:
                     if hasattr(item, 'text'):
-                        full_text += item.text + " "
+                        full_text_parts.append(item.text)
                     elif isinstance(item, dict) and 'text' in item:
-                        full_text += item['text'] + " "
+                        full_text_parts.append(item['text'])
                     else:
-                        full_text += str(item) + " "
+                        # Fallback for unexpected formats
+                        full_text_parts.append(str(item))
                 
-                print(f"Fetched {len(full_text)} characters from YouTube transcript.")
+                full_text = " ".join(full_text_parts)
+                
+                print(f"✅ [YOUTUBE] Successfully fetched {len(full_text)} characters.")
                 return full_text[:25000]
                 
             except Exception as e:
-                print(f"YouTube transcript error: {e}")
-                # Try fallback list method just in case fetch fails but others exist
-                try:
-                    yt_api = YouTubeTranscriptApi()
-                    tx_list = yt_api.list(video_id)
-                    # Find any transcript that matches our languages or just the first generated one
-                    try:
-                        transcript = tx_list.find_transcript(['en', 'hi', 'en-IN', 'hi-IN'])
-                    except:
-                        # Fallback to any transcript if specific language not found
-                        print("Preferred language not found, taking first available.")
-                        transcript = next(iter(tx_list))
-                        
-                    data = transcript.fetch()
-                    
-                    # Handle fallback data extraction same way
-                    full_text = ""
-                    for item in data:
-                        if hasattr(item, 'text'):
-                            full_text += item.text + " "
-                        elif isinstance(item, dict) and 'text' in item:
-                            full_text += item['text'] + " "
-                        else:
-                            full_text += str(item) + " "
-
-                    print(f"Fallback fetched {len(full_text)} chars.")
-                    return full_text[:25000]
-                except Exception as e2:
-                    print(f"Critical transcript failure: {e2}")
-                    return ""
+                print(f"⚠️ [YOUTUBE] Transcript missing/disabled: {e}")
+                # FALLBACK: Try to scrape page title/description if transcript fails
+                return self._scrape_youtube_metadata(url)
         
         except Exception as e:
-            print(f"YouTube transcript error: {e}")
+            print(f"❌ [YOUTUBE] Critical Error: {e}")
+            return ""
+
+    def _scrape_youtube_metadata(self, url: str) -> str:
+        """Fallback: Scrapes YouTube page title and description if transcript is missing."""
+        try:
+            print(f"🔎 [YOUTUBE] Scrapping metadata as fallback for: {url}")
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code != 200: return ""
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            title = soup.find('title').text.replace('- YouTube', '').strip() if soup.find('title') else ""
+            
+            # Description is often in meta tags
+            description = ""
+            desc_tag = soup.find('meta', attrs={'name': 'description'})
+            if desc_tag:
+                description = desc_tag.get('content', '')
+            
+            if title or description:
+                print(f"✅ [YOUTUBE] Metadata found: {title}")
+                return f"Topic: {title}\nSummary: {description}"
+            return ""
+        except Exception as e:
+            print(f"❌ [YOUTUBE] Metadata scraping failed: {e}")
             return ""

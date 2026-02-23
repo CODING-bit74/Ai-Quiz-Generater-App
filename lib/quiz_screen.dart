@@ -6,6 +6,7 @@ import 'controllers/quiz_controller.dart';
 import 'controllers/history_controller.dart';
 // Custom painter for the results celebration effect
 import 'painters/confetti_painter.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class QuizScreen extends StatelessWidget {
   const QuizScreen({super.key});
@@ -464,7 +465,8 @@ class QuizScreen extends StatelessWidget {
     // Current state extraction
     final question =
         controller.questions[controller.currentQuestionIndex.value];
-    final options = question['options'] as List<dynamic>;
+    final options =
+        (question['options'] as List<dynamic>?) ?? ['A', 'B', 'C', 'D'];
     final userSelection =
         controller.userAnswers[controller.currentQuestionIndex.value];
 
@@ -590,6 +592,33 @@ class QuizScreen extends StatelessWidget {
                         fontFamily: 'Roboto', // Or your app's font
                       ),
                     ),
+                    if (question['markdown_diagram'] != null &&
+                        question['markdown_diagram']
+                            .toString()
+                            .trim()
+                            .isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: MarkdownBody(
+                          data: question['markdown_diagram'].toString(),
+                          styleSheet: MarkdownStyleSheet(
+                            code: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            codeblockPadding: const EdgeInsets.all(12),
+                            codeblockDecoration: BoxDecoration(
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.black26
+                                  : Colors.black12,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -1107,7 +1136,8 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
           itemCount: controller.questions.length,
           itemBuilder: (context, index) {
             final question = controller.questions[index];
-            final options = question['options'] as List<dynamic>;
+            final options =
+                (question['options'] as List<dynamic>?) ?? ['A', 'B', 'C', 'D'];
             final userIndex = controller.userAnswers[index];
             final correctAnswer = question['answer'];
 
@@ -1184,6 +1214,26 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
                       ),
                     ],
                   ),
+                  if (question['markdown_diagram'] != null &&
+                      question['markdown_diagram'].toString().trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12.0),
+                      child: MarkdownBody(
+                        data: question['markdown_diagram'].toString(),
+                        styleSheet: MarkdownStyleSheet(
+                          code: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          codeblockPadding: const EdgeInsets.all(12),
+                          codeblockDecoration: BoxDecoration(
+                            color: isDark ? Colors.black26 : Colors.black12,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   // Render all options with correctness highlights
                   ...List.generate(options.length, (optIndex) {

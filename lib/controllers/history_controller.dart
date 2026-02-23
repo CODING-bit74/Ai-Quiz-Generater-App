@@ -164,4 +164,112 @@ class HistoryController extends GetxController {
     // Return top 20
     return sortedHistory.take(20).toList();
   }
+
+  // --- TARGET SPECIFIC LOGIC ---
+
+  List<QuizResult> getTargetSpecificHistory(String targetExamName) {
+    return history.where((r) => r.examName == targetExamName).toList();
+  }
+
+  String getTargetRank(String targetExamName) {
+    int count = getTargetSpecificHistory(targetExamName).length;
+    if (count > 50) return "LEGEND";
+    if (count > 30) return "MASTER";
+    if (count > 15) return "COMMANDER";
+    if (count > 5) return "OFFICER";
+    return "ROOKIE";
+  }
+
+  double getTargetRankProgress(String targetExamName) {
+    int count = getTargetSpecificHistory(targetExamName).length;
+    if (count > 50) return 1.0;
+
+    int lowerBound = 0;
+    int upperBound = 6;
+
+    if (count > 30) {
+      lowerBound = 30;
+      upperBound = 51;
+    } else if (count > 15) {
+      lowerBound = 15;
+      upperBound = 31;
+    } else if (count > 5) {
+      lowerBound = 5;
+      upperBound = 16;
+    }
+
+    return (count - lowerBound) / (upperBound - lowerBound);
+  }
+
+  int getTargetMissionsToNextRank(String targetExamName) {
+    int count = getTargetSpecificHistory(targetExamName).length;
+    if (count > 50) return 0;
+    if (count > 30) return 51 - count;
+    if (count > 15) return 31 - count;
+    if (count > 5) return 16 - count;
+    return 6 - count;
+  }
+
+  // --- DAILY MISSION LOGIC ---
+
+  int get quizzesDoneToday {
+    final now = DateTime.now();
+    return history.where((r) {
+      return r.date.year == now.year &&
+          r.date.month == now.month &&
+          r.date.day == now.day;
+    }).length;
+  }
+
+  int get dailyStreak {
+    if (history.isEmpty) return 0;
+
+    // Sort by date descending
+    final sorted = List<QuizResult>.from(history)
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    int streak = 0;
+    final now = DateTime.now();
+
+    // Reset time components for accurate date comparison
+    DateTime currentDate = DateTime(now.year, now.month, now.day);
+
+    // Check if we did a quiz today
+    bool didQuizToday = sorted.any(
+      (r) =>
+          r.date.year == now.year &&
+          r.date.month == now.month &&
+          r.date.day == now.day,
+    );
+
+    // If we haven't done a quiz today, the streak continues from yesterday
+    if (!didQuizToday) {
+      currentDate = currentDate.subtract(const Duration(days: 1));
+    }
+
+    Set<String> processedDates = {};
+
+    for (var r in sorted) {
+      // Create a date-only string key to handle multiple quizzes on same day
+      final dateKey = "${r.date.year}-${r.date.month}-${r.date.day}";
+
+      if (processedDates.contains(dateKey)) continue;
+      processedDates.add(dateKey);
+
+      final quizDate = DateTime(r.date.year, r.date.month, r.date.day);
+
+      // If quiz date matches the expected streak date
+      if (quizDate.isAtSameMomentAs(currentDate)) {
+        streak++;
+        // Move expected date back by one day
+        currentDate = currentDate.subtract(const Duration(days: 1));
+      } else if (quizDate.isBefore(currentDate)) {
+        // Gap found, streak ends
+        break;
+      }
+      // If quiz is *after* current date (shouldn't happen with sorted list but safe to ignore), continue
+    }
+
+    return streak;
+  }
 }
