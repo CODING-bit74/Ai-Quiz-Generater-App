@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'controllers/history_controller.dart';
 import 'controllers/quiz_controller.dart';
+import 'quiz_screen.dart';
 import 'package:intl/intl.dart';
 
 class PerformanceLabScreen extends StatelessWidget {
@@ -331,7 +332,9 @@ class PerformanceLabScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         quiz.startReChallenge(subject);
-        Get.back(); // Return to master lab
+        Get.to(
+          () => const QuizScreen(),
+        ); // Navigate to QuizScreen instead of back
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -475,21 +478,29 @@ class PerformanceLabScreen extends StatelessWidget {
               children: [
                 Icon(subjectIcon, size: 10, color: subjectColor),
                 const SizedBox(width: 4),
-                Text(
-                  res.subject,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: subjectColor,
+                Flexible(
+                  child: Text(
+                    res.subject,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: subjectColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Text(
-                  " • $formattedDate",
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.4),
+                Flexible(
+                  child: Text(
+                    " • $formattedDate",
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.4),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

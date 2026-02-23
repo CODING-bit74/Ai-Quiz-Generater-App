@@ -130,6 +130,9 @@ class EconomyController extends GetxController {
 
   /// Daily Login Bonus Logic
   Future<void> checkDailyBonus() async {
+    // 1. Guard: Only give bonus if logged in
+    if (!AuthService.to.isLoggedIn) return;
+
     final lastBonus = await DatabaseService.instance.getLastBonusDate();
     final now = DateTime.now();
 

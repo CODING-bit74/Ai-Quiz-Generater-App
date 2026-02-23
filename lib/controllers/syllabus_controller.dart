@@ -11,6 +11,9 @@ class SyllabusController extends GetxController {
   var posts = <Post>[].obs;
   var organization = Rx<Organization?>(null);
   var userProgress = Rx<UserProgress?>(null);
+  var specificExam = Rx<Map<String, dynamic>?>(
+    null,
+  ); // To store pattern/eligibility
 
   Future<void> fetchExamIntelligence(String examName) async {
     isLoading.value = true;
@@ -25,6 +28,7 @@ class SyllabusController extends GetxController {
       if (examRes != null) {
         final examId = examRes['id'];
         final orgId = examRes['organization_id'];
+        specificExam.value = examRes;
 
         // 2. Fetch Syllabus
         final syllabusRes = await _supabase

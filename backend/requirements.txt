@@ -3,15 +3,12 @@ python-dotenv
 langchain
 langchain-openai
 langchain-community
-langchain-chroma
-chromadb
-gunicorn
-pysqlite3
 beautifulsoup4
 requests
-pinecone-client
+pinecone
 langchain-pinecone
 pypdf
 youtube-transcript-api
 supabase
 gotrue
+json-repair>=0.58.0

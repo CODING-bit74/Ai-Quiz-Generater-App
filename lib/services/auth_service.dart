@@ -19,14 +19,15 @@ class AuthService extends GetxService {
     currentUser.value = _supabase.auth.currentUser;
   }
 
-  /// Sign Up with Email & Password
-  Future<String?> signUp(String email, String password) async {
+  /// Sign Up with Email, Password & Name
+  Future<String?> signUp(String email, String password, String name) async {
     isLoading.value = true;
     try {
       final AuthResponse res = await _supabase.auth.signUp(
         email: email,
         password: password,
         emailRedirectTo: 'io.testproject.app://login-callback',
+        data: {'full_name': name}, // Store name in metadata
       );
 
       if (res.user != null) {

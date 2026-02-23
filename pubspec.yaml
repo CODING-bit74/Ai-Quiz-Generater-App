@@ -44,6 +44,9 @@ dependencies:
   intl: ^0.19.0
   supabase_flutter: ^2.8.3
   google_fonts: ^8.0.1
+  audioplayers: ^6.5.1
+  flutter_markdown: ^0.7.7+1
+  markdown: ^7.3.0
 
 dev_dependencies:
   flutter_test:
@@ -69,8 +72,19 @@ flutter:
 
   assets:
     - assets/images/robot_avatar.png
+    - assets/images/robot_avatar_army.png
+    - assets/images/robot_avatar_navy.png
+    - assets/images/robot_avatar_police.png
+    - assets/images/robot_avatar_ias.png
+    - assets/images/robot_avatar_banking.png
+    - assets/images/robot_avatar_judiciary.png
+    - assets/images/robot_avatar_medical.png
+    - assets/images/robot_avatar_teaching.png
+    - assets/images/robot_avatar_ssc.png
+    - assets/images/robot_avatar_civil_service.png
     - assets/images/quiz_agent.jpg
     - assets/images/govprpeai_logo.png
+    - assets/audio/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

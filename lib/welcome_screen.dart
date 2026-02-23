@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:test_project/target_configuration_screen.dart';
 import 'controllers/theme_controller.dart';
 import 'controllers/history_controller.dart';
 import 'controllers/economy_controller.dart';
+import 'controllers/quiz_controller.dart';
 
 import 'services/auth_service.dart';
 import 'screens/auth_screen.dart';
@@ -24,9 +27,35 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   late Animation<Offset> _offsetAnimation1;
   late Animation<Offset> _offsetAnimation2;
 
+  late Timer _avatarTimer;
+  int _currentAvatarIndex = 0;
+  final List<String> _avatarAssets = [
+    'assets/images/robot_avatar.png',
+    'assets/images/robot_avatar_army.png',
+    'assets/images/robot_avatar_navy.png',
+    'assets/images/robot_avatar_police.png',
+    'assets/images/robot_avatar_ias.png',
+    'assets/images/robot_avatar_banking.png',
+    'assets/images/robot_avatar_civil_service.png',
+    'assets/images/robot_avatar_judiciary.png',
+    'assets/images/robot_avatar_medical.png',
+    'assets/images/robot_avatar_teaching.png',
+    'assets/images/robot_avatar_ssc.png',
+  ];
+
   @override
   void initState() {
     super.initState();
+
+    // Start Avatar Rotation Timer
+    _avatarTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (mounted) {
+        setState(() {
+          _currentAvatarIndex =
+              (_currentAvatarIndex + 1) % _avatarAssets.length;
+        });
+      }
+    });
 
     // Controller 1: Top Right Orb (Float + Pulse)
     _controller1 = AnimationController(
@@ -53,6 +82,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   @override
   void dispose() {
+    _avatarTimer.cancel();
     _controller1.dispose();
     _controller2.dispose();
     super.dispose();
@@ -73,12 +103,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       ),
       body: Stack(
         children: [
-          // Credit Badge (Top Right)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 20,
-            child: Obx(
-              () => Container(
+          // Credit Badge (Top Right - only for logged in users)
+          Obx(() {
+            if (!AuthService.to.isLoggedIn) return const SizedBox.shrink();
+
+            return Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              right: 20,
+              child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
@@ -117,8 +149,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   ],
                 ),
               ),
-            ),
-          ),
+            );
+          }),
 
           // Background Mesh Gradient Effect
           AnimatedBuilder(
@@ -204,58 +236,97 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            Container(
-                              width: 200,
-                              height: 200,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.1),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.blue.withOpacity(0.15),
-                                    blurRadius: 40,
-                                    spreadRadius: 5,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Pulsing Ring
-                            ScaleTransition(
-                              scale: Tween(begin: 0.95, end: 1.05).animate(
-                                CurvedAnimation(
-                                  parent: _controller1,
-                                  curve: Curves.easeInOut,
-                                ),
-                              ),
-                              child: Container(
-                                width: 180,
-                                height: 180,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.blue.withOpacity(0.3),
-                                    width: 1.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            ClipOval(
-                              child: Container(
-                                width: 160,
-                                height: 160,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  image: const DecorationImage(
-                                    image: AssetImage(
-                                      'assets/images/robot_avatar.png',
+                            // Dynamic Avatar Logic
+                            Obx(() {
+                              final AuthService auth = Get.find();
+                              final QuizController quizController = Get.find();
+
+                              // Default Carousel State (Guest or No Goal)
+                              if (!auth.isLoggedIn ||
+                                  !quizController.isGoalSet.value) {
+                                return Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Container(
+                                      width: 200,
+                                      height: 200,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.1),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.blue.withOpacity(
+                                              0.15,
+                                            ),
+                                            blurRadius: 40,
+                                            spreadRadius: 5,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                            ),
+                                    // Pulsing Ring
+                                    ScaleTransition(
+                                      scale: Tween(begin: 0.95, end: 1.05)
+                                          .animate(
+                                            CurvedAnimation(
+                                              parent: _controller1,
+                                              curve: Curves.easeInOut,
+                                            ),
+                                          ),
+                                      child: Container(
+                                        width: 180,
+                                        height: 180,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.blue.withOpacity(0.3),
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    ClipOval(
+                                      child: AnimatedSwitcher(
+                                        duration: const Duration(seconds: 1),
+                                        transitionBuilder:
+                                            (
+                                              Widget child,
+                                              Animation<double> animation,
+                                            ) {
+                                              return FadeTransition(
+                                                opacity: animation,
+                                                child: child,
+                                              );
+                                            },
+                                        child: Container(
+                                          key: ValueKey<int>(
+                                            _currentAvatarIndex,
+                                          ),
+                                          width: 160,
+                                          height: 160,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            image: DecorationImage(
+                                              image: AssetImage(
+                                                _avatarAssets[_currentAvatarIndex],
+                                              ),
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              // LOGGED IN & GOAL SET: Show Specific Avatar
+                              return _buildTargetAvatar(
+                                quizController.currentAvatarPath,
+                              );
+                            }),
                           ],
                         ),
                       ),
@@ -274,27 +345,40 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         },
                         child: Column(
                           children: [
-                            TweenAnimationBuilder<int>(
-                              key: const ValueKey("typewriter_animation"),
-                              tween: IntTween(
-                                begin: 0,
-                                end: "WELCOME TO GOVPREP AI".length,
-                              ),
-                              duration: const Duration(milliseconds: 1500),
-                              builder: (context, value, child) {
-                                return Text(
-                                  "WELCOME TO GOVPREP AI".substring(0, value),
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withOpacity(0.6),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 3,
-                                  ),
-                                );
-                              },
-                            ),
+                            Obx(() {
+                              final isGoalSet =
+                                  Get.find<QuizController>().isGoalSet.value;
+                              final text = isGoalSet
+                                  ? Get.find<QuizController>().currentRoleTitle
+                                  : "WELCOME TO GOVPREP AI";
+
+                              return TweenAnimationBuilder<int>(
+                                key: ValueKey(
+                                  text,
+                                ), // Restart animation on text change
+                                tween: IntTween(begin: 0, end: text.length),
+                                duration: Duration(
+                                  milliseconds: text.length * 100,
+                                ),
+                                builder: (context, value, child) {
+                                  return Text(
+                                    text.substring(0, value),
+                                    style: GoogleFonts.orbitron(
+                                      fontSize: 14,
+                                      color: Colors.cyanAccent,
+                                      letterSpacing: 2,
+                                      fontWeight: FontWeight.bold,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.cyan,
+                                          blurRadius: 10,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            }),
                             const SizedBox(height: 8),
                             Obx(
                               () => ShaderMask(
@@ -355,12 +439,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      "${historyController.history.length} MISSIONS COMPLETED",
-                                      style: TextStyle(
+                                      Get.find<AuthService>().isLoggedIn
+                                          ? "${historyController.history.length} MISSIONS COMPLETED"
+                                          : "START YOUR JOURNEY",
+                                      style: GoogleFonts.orbitron(
                                         color: Theme.of(
                                           context,
                                         ).colorScheme.onSurface,
-                                        fontSize: 12,
+                                        fontSize: 10,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 1,
                                       ),
@@ -465,6 +551,81 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTargetAvatar(String avatarPath) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Static Glow for Selected Goal
+        Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.blueAccent.withOpacity(0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blueAccent.withOpacity(0.2),
+                blurRadius: 50,
+                spreadRadius: 10,
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: 180,
+          height: 180,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.blueAccent.withOpacity(0.5),
+              width: 2,
+            ),
+          ),
+        ),
+        ClipOval(
+          child: Container(
+            width: 160,
+            height: 160,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image: AssetImage(avatarPath),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+        // Badge
+        Positioned(
+          bottom: 0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              "TARGET LOCKED",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
