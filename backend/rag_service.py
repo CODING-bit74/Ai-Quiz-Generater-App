@@ -21,9 +21,19 @@ from youtube_transcript_api import YouTubeTranscriptApi
 # Load environment variables from .env file
 from dotenv import load_dotenv
 import os
+import redis
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, '.env')
 load_dotenv(dotenv_path=env_path)
+
+# --- REDIS CONFIGURATION ---
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+try:
+    redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
+    redis_client.ping()
+except Exception as e:
+    redis_client = None
 
 # Retrieve configuration from environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -430,7 +440,17 @@ Return ONLY the JSON. No conversational text.
             return ""
 
     def _scrape_url(self, url: str) -> str:
-        """Specialized student-centric web scraper with domain handlers."""
+        """Specialized student-centric web scraper with domain handlers and caching."""
+        cache_key = f"scrape:{url}"
+        if redis_client:
+            try:
+                cached_content = redis_client.get(cache_key)
+                if cached_content:
+                    print(f"⚡ CACHE HIT! Returning scraped content for {url}")
+                    return cached_content
+            except Exception as e:
+                print(f"⚠️ Redis read error: {e}")
+
         try:
             # Emulate a high-reputation browser
             headers = {
@@ -473,8 +493,17 @@ Return ONLY the JSON. No conversational text.
                     lines.append(l)
             
             clean_text = '\n'.join(lines)
-            print(f"Scraped {len(clean_text)} study characters from {url}")
-            return clean_text[:15000]
+            result_text = clean_text[:15000]
+            print(f"Scraped {len(result_text)} study characters from {url}")
+            
+            if redis_client and result_text:
+                try:
+                    # Cache scraped url data for 7 days
+                    redis_client.setex(cache_key, 604800, result_text)
+                except Exception as e:
+                    pass
+                
+            return result_text
             
         except Exception as e:
             print(f"Scraping error: {e}")
@@ -502,6 +531,16 @@ Return ONLY the JSON. No conversational text.
                 return ""
 
             print(f"🎬 [YOUTUBE] video_id: {video_id}")
+            
+            cache_key = f"yt_transcript:{video_id}"
+            if redis_client:
+                try:
+                    cached_transcript = redis_client.get(cache_key)
+                    if cached_transcript:
+                        print(f"⚡ CACHE HIT! Returning transcript for video {video_id}")
+                        return cached_transcript
+                except Exception as e:
+                    print(f"⚠️ Redis read error: {e}")
             
             try:
                 # IMPORTANT: Some versions of this library require instantiation
@@ -548,9 +587,18 @@ Return ONLY the JSON. No conversational text.
                         full_text_parts.append(str(item))
                 
                 full_text = " ".join(full_text_parts)
+                result_text = full_text[:25000]
                 
-                print(f"✅ [YOUTUBE] Successfully fetched {len(full_text)} characters.")
-                return full_text[:25000]
+                print(f"✅ [YOUTUBE] Successfully fetched {len(result_text)} characters.")
+                
+                if redis_client and result_text:
+                    try:
+                        # Cache YouTube transcripts for 30 days
+                        redis_client.setex(cache_key, 2592000, result_text)
+                    except Exception as e:
+                        pass
+                
+                return result_text
                 
             except Exception as e:
                 print(f"⚠️ [YOUTUBE] Transcript missing/disabled: {e}")

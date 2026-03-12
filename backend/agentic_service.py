@@ -31,9 +31,9 @@ class QuizAgent:
     (Deep Learning & NLP components removed per user request)
     """
     def __init__(self):
-        # 1. Initialize Core Components
+        # 1. Initialize Core Components with our new FINE-TUNED model
         self.llm = ChatOpenAI(
-            model="gpt-4o-mini", 
+            model="ft:gpt-4o-mini-2024-07-18:personal:quiz-generator:DIGxdncf", 
             temperature=0.7,
             openai_api_key=OPENAI_API_KEY
         )
@@ -309,63 +309,62 @@ class QuizAgent:
         target_info = f"target: {exam} ({sector})" if exam else f"Sector: {sector}"
         pyq_rule = "5. PYQ STYLE: The user requested Previous Year Questions. Format, structure, and difficulty MUST match official exam questions. Cite the exam where possible in the explanation." if input_type == 'pyq_search' else ""
         
-        prompt_template = """
-You are the **Ultimate AI Quiz Professor** (Agentic Mode).
-TASK: Generate {num} "{diff}" level MCQs.
-TARGET: {target}
-SUBJECT: {subject}
-TOPIC: "{topic}"
-PERSONA: {persona}
+        all_questions = []
+        # We allow up to num + 2 attempts to gather enough questions
+        max_attempts = num + 2
+        attempts = 0
+        
+        while len(all_questions) < num and attempts < max_attempts:
+            attempts += 1
+            remaining = num - len(all_questions)
+            
+            # Create a localized prompt for the current batch
+            batch_prompt = f"""You are acting as the following AI Tutor persona: {persona}
+Your task is to generate EXACTLY {remaining} {diff} level MCQs in {lang} language based on the context.
+Output ONLY a JSON array of {remaining} question objects.
 
-CORE AGENT CONTEXT:
-{context}
-
-STRICT REQUIREMENTS:
-1. FACTUAL SUPREMACY: Use the Context.
-2. SMART DISTRACTORS: Tricky but distinct.
-3. EDUCATIONAL EXPLANATIONS: Start with WHY it's correct + Pro-Tip.
-4. LANGUAGE: {lang}
-5. VISUAL DIAGRAMS: If a question requires a diagram to understand or solve (e.g., Geometry, Physics, Logic, Data Interpretation), you MUST create a high-quality ASCII art or Markdown table diagram and provide it in the "markdown_diagram" field. If no diagram is needed, omit the field entirely. VERY IMPORTANT: You must properly escape all newlines (`\\n`) and quotes (`\\"`) inside the JSON string value for the markdown diagram so the JSON remains valid.
-{pyq_rule}
-
-Output STRICT JSON ARRAY:
-[
-    {{
-        "question": "Question text",
-        "markdown_diagram": "```\nOptional ascii diagram or markdown table here...\n```",
-        "options": ["A", "B", "C", "D"],
-        "answer": "Correct Option Text",
-        "explanation": "Detailed explanation..."
-    }}
-]
-Return ONLY JSON.
+TOPIC: '{topic}'
+TARGET: {target_info}
 """
-        try:
-            prompt = PromptTemplate.from_template(prompt_template)
-            chain = prompt | self.llm
-            
-            response_msg = chain.invoke({
-                "num": num, "diff": diff, "target": target_info,
-                "subject": subject if subject else topic,
-                "topic": topic, "persona": persona,
-                "context": context[:15000], 
-                "lang": lang,
-                "pyq_rule": pyq_rule
-            })
-            
-            cleaned = self._clean_json(response_msg.content)
-            # Use json_repair to handle common LLM JSON formatting errors like unescaped newlines
-            questions = json_repair.loads(cleaned)
-            
-            return json.dumps({
-                "questions": questions,
-                "detected_subject": subject,
-                "detected_topic": topic
-            })
-            
-        except Exception as e:
-            print(f"❌ Generation Error: {e}")
-            return json.dumps({"questions": [], "error": str(e)})
+            if all_questions:
+                batch_prompt += "\nAvoid repeating these questions:\n" + "\n".join([q.get('question', '')[:50] for q in all_questions])
+
+            current_prompt_template = batch_prompt + "\n\nContext:\n{context}"
+
+            try:
+                # Use a fresh prompt each time to clear previous state
+                prompt = PromptTemplate.from_template(current_prompt_template)
+                chain = prompt | self.llm
+                
+                response_msg = chain.invoke({"context": context[:15000]})
+                
+                cleaned = self._clean_json(response_msg.content)
+                new_questions = json_repair.loads(cleaned)
+                
+                if isinstance(new_questions, list):
+                    all_questions.extend(new_questions)
+                elif isinstance(new_questions, dict):
+                    all_questions.append(new_questions)
+                
+                # Deduplicate and clamp
+                unique_qs = []
+                seen = set()
+                for q in all_questions:
+                    txt = q.get('question', '').strip().lower()
+                    if txt and txt not in seen:
+                        seen.add(txt)
+                        unique_qs.append(q)
+                all_questions = unique_qs[:num]
+
+            except Exception as e:
+                print(f"Attempt {attempts} failed: {e}")
+                time.sleep(0.5)
+
+        return json.dumps({
+            "questions": all_questions,
+            "detected_subject": subject,
+            "detected_topic": topic
+        })
 
     @staticmethod
     def _clean_json(text: str) -> str:
