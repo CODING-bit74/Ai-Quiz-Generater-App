@@ -44,3 +44,16 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 backend/.env
+
+
+
+
+
+#Node js git ignore folders
+
+node_modules
+.env
+.env.local
+dist
+.DS_Store
+coverage
