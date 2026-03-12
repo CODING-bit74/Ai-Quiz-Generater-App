@@ -71,17 +71,17 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/robot_avatar.png
-    - assets/images/robot_avatar_army.png
-    - assets/images/robot_avatar_navy.png
-    - assets/images/robot_avatar_police.png
-    - assets/images/robot_avatar_ias.png
-    - assets/images/robot_avatar_banking.png
-    - assets/images/robot_avatar_judiciary.png
-    - assets/images/robot_avatar_medical.png
-    - assets/images/robot_avatar_teaching.png
-    - assets/images/robot_avatar_ssc.png
-    - assets/images/robot_avatar_civil_service.png
+    - assets/images/human_avatar.png
+    - assets/images/human_avatar_army.png
+    - assets/images/human_avatar_navy.png
+    - assets/images/human_avatar_police.png
+    - assets/images/human_avatar_ias.png
+    - assets/images/human_avatar_banking.png
+    - assets/images/human_avatar_judiciary.png
+    - assets/images/human_avatar_medical.png
+    - assets/images/human_avatar_teaching.png
+    - assets/images/human_avatar_ssc.png
+    - assets/images/human_avatar_civil_service.png
     - assets/images/quiz_agent.jpg
     - assets/images/govprpeai_logo.png
     - assets/audio/

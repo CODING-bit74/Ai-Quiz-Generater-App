@@ -30,17 +30,17 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   late Timer _avatarTimer;
   int _currentAvatarIndex = 0;
   final List<String> _avatarAssets = [
-    'assets/images/robot_avatar.png',
-    'assets/images/robot_avatar_army.png',
-    'assets/images/robot_avatar_navy.png',
-    'assets/images/robot_avatar_police.png',
-    'assets/images/robot_avatar_ias.png',
-    'assets/images/robot_avatar_banking.png',
-    'assets/images/robot_avatar_civil_service.png',
-    'assets/images/robot_avatar_judiciary.png',
-    'assets/images/robot_avatar_medical.png',
-    'assets/images/robot_avatar_teaching.png',
-    'assets/images/robot_avatar_ssc.png',
+    'assets/images/human_avatar.png',
+    'assets/images/human_avatar_army.png',
+    'assets/images/human_avatar_navy.png',
+    'assets/images/human_avatar_police.png',
+    'assets/images/human_avatar_ias.png',
+    'assets/images/human_avatar_banking.png',
+    'assets/images/human_avatar_civil_service.png',
+    'assets/images/human_avatar_judiciary.png',
+    'assets/images/human_avatar_medical.png',
+    'assets/images/human_avatar_teaching.png',
+    'assets/images/human_avatar_ssc.png',
   ];
 
   @override

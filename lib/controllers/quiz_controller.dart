@@ -114,36 +114,36 @@ class QuizController extends GetxController {
 
   // --- HELPER: GET DYNAMIC AVATAR PATH ---
   String get currentAvatarPath {
-    String avatarPath = 'assets/images/robot_avatar.png'; // Default
+    String avatarPath = 'assets/images/human_avatar.png'; // Default
 
     // Normalize strings for comparison
     final s = selectedSector.value.toLowerCase();
     final e = selectedExam.value.toLowerCase();
 
     if (s.contains('bank')) {
-      avatarPath = 'assets/images/robot_avatar_banking.png';
+      avatarPath = 'assets/images/human_avatar_banking.png';
     } else if (s.contains('ssc') || s.contains('railway')) {
-      avatarPath = 'assets/images/robot_avatar_ssc.png';
+      avatarPath = 'assets/images/human_avatar_ssc.png';
     } else if (s.contains('upsc') || s.contains('civil')) {
-      avatarPath = 'assets/images/robot_avatar_ias.png';
+      avatarPath = 'assets/images/human_avatar_ias.png';
     } else if (s.contains('teach')) {
-      avatarPath = 'assets/images/robot_avatar_teaching.png';
+      avatarPath = 'assets/images/human_avatar_teaching.png';
     } else if (s.contains('medic')) {
-      avatarPath = 'assets/images/robot_avatar_medical.png';
+      avatarPath = 'assets/images/human_avatar_medical.png';
     } else if (s.contains('law') || s.contains('judic')) {
-      avatarPath = 'assets/images/robot_avatar_judiciary.png';
+      avatarPath = 'assets/images/human_avatar_judiciary.png';
     } else if (s.contains('defence')) {
       if (e.contains('navy')) {
-        avatarPath = 'assets/images/robot_avatar_navy.png';
+        avatarPath = 'assets/images/human_avatar_navy.png';
       } else if (e.contains('police')) {
-        avatarPath = 'assets/images/robot_avatar_police.png';
+        avatarPath = 'assets/images/human_avatar_police.png';
       } else {
-        avatarPath = 'assets/images/robot_avatar_army.png';
+        avatarPath = 'assets/images/human_avatar_army.png';
       }
     } else if (s.contains('state')) {
-      avatarPath = 'assets/images/robot_avatar_civil_service.png';
+      avatarPath = 'assets/images/human_avatar_civil_service.png';
     } else if (s.contains('police')) {
-      avatarPath = 'assets/images/robot_avatar_police.png';
+      avatarPath = 'assets/images/human_avatar_police.png';
     }
 
     return avatarPath;

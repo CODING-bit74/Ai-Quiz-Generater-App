@@ -5,12 +5,26 @@ from rag_service import RAGService, TranscriptNotFoundError
 from agentic_service import QuizAgent  # Import the new Agent
 
 import os
+import hashlib
+import json
+import redis
 from functools import wraps
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # Load environment variables
 load_dotenv()
+
+# --- REDIS CONFIGURATION ---
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+try:
+    redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
+    # Test connection
+    redis_client.ping()
+    print("✅ Successfully connected to Redis!")
+except Exception as e:
+    print(f"⚠️ Warning: Redis connection failed. Caching will be disabled. Error: {e}")
+    redis_client = None
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -132,6 +146,27 @@ def generate_quiz():
     if not topic:
         return jsonify({"error": "No topic or content provided"}), 400
         
+    # --- REDIS CACHING LOGIC ---
+    cache_key = None
+    if redis_client:
+        # Create a unique, deterministic hash for this specific quiz request
+        # We sort dict keys to ensure consistent hashing
+        cache_data = {
+            "topic": topic, "num": num_questions, "diff": difficulty, 
+            "type": input_type, "lang": language, "sector": exam_sector, 
+            "exam": exam_name, "subj": subject
+        }
+        cache_str = json.dumps(cache_data, sort_keys=True)
+        cache_key = f"quiz:{hashlib.sha256(cache_str.encode()).hexdigest()}"
+        
+        try:
+            cached_quiz = redis_client.get(cache_key)
+            if cached_quiz:
+                print(f"⚡ CACHE HIT! Returning cached quiz for topic '{topic}'")
+                return cached_quiz, 200, {'Content-Type': 'application/json'}
+        except Exception as e:
+            print(f"⚠️ Redis read error: {e}")
+
     try:
         # Call the Agentic Service
         quiz_json = quiz_agent.generate_quiz_agentic(
@@ -144,6 +179,16 @@ def generate_quiz():
             exam_name=exam_name,
             subject=subject
         )
+        
+        # --- SAVE TO REDIS CACHE ---
+        if redis_client and cache_key and ("error" not in quiz_json):
+            try:
+                # Cache successful quizzes for 24 hours (86400 seconds)
+                redis_client.setex(cache_key, 86400, quiz_json)
+                print(f"💾 Saved generated quiz to cache (TTL: 24h)")
+            except Exception as e:
+                 print(f"⚠️ Redis write error: {e}")
+
         return quiz_json, 200, {'Content-Type': 'application/json'}
     except TranscriptNotFoundError as e:
         return jsonify({"error": str(e)}), 400
