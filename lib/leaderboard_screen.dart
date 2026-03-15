@@ -31,9 +31,9 @@ class LeaderboardScreen extends StatelessWidget {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).cardColor.withOpacity(0.5),
+              color: Theme.of(context).cardColor.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: Icon(
               Icons.arrow_back_ios_new_rounded,
@@ -93,7 +93,7 @@ class LeaderboardScreen extends StatelessWidget {
                     Icon(
                       Icons.emoji_events_outlined,
                       size: 80,
-                      color: Colors.grey.withOpacity(0.5),
+                      color: Colors.grey.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -102,7 +102,7 @@ class LeaderboardScreen extends StatelessWidget {
                         fontSize: 18,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -222,20 +222,20 @@ class LeaderboardScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Theme.of(
                             context,
-                          ).cardColor.withOpacity(isDark ? 0.6 : 0.8),
+                          ).cardColor.withValues(alpha: isDark ? 0.6 : 0.8),
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(30),
                             topRight: Radius.circular(30),
                           ),
                           border: Border(
                             top: BorderSide(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               width: 1,
                             ),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, -5),
                             ),
@@ -256,7 +256,7 @@ class LeaderboardScreen extends StatelessWidget {
                               separatorBuilder: (context, index) => Divider(
                                 color: Theme.of(
                                   context,
-                                ).dividerColor.withOpacity(0.1),
+                                ).dividerColor.withValues(alpha: 0.1),
                               ),
                               itemBuilder: (context, index) {
                                 final realIndex = index + 3;
@@ -274,17 +274,17 @@ class LeaderboardScreen extends StatelessWidget {
                                       color: isExpanded.value
                                           ? Theme.of(
                                               context,
-                                            ).cardColor.withOpacity(0.5)
+                                            ).cardColor.withValues(alpha: 0.5)
                                           : Theme.of(
                                               context,
-                                            ).cardColor.withOpacity(0.3),
+                                            ).cardColor.withValues(alpha: 0.3),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
                                         color: isExpanded.value
-                                            ? Colors.blue.withOpacity(0.3)
+                                            ? Colors.blue.withValues(alpha: 0.3)
                                             : Theme.of(
                                                 context,
-                                              ).dividerColor.withOpacity(0.05),
+                                              ).dividerColor.withValues(alpha: 0.05),
                                       ),
                                     ),
                                     child: Column(
@@ -309,7 +309,7 @@ class LeaderboardScreen extends StatelessWidget {
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: Colors.black
-                                                      .withOpacity(0.1),
+                                                      .withValues(alpha: 0.1),
                                                   blurRadius: 5,
                                                   offset: const Offset(0, 2),
                                                 ),
@@ -317,7 +317,7 @@ class LeaderboardScreen extends StatelessWidget {
                                               border: Border.all(
                                                 color: _getRankColor(
                                                   realIndex + 1,
-                                                ).withOpacity(0.5),
+                                                ).withValues(alpha: 0.5),
                                                 width: 2,
                                               ),
                                             ),
@@ -365,7 +365,7 @@ class LeaderboardScreen extends StatelessWidget {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withOpacity(0.6),
+                                                  .withValues(alpha: 0.6),
                                             ),
                                           ),
                                           trailing: Column(
@@ -391,7 +391,7 @@ class LeaderboardScreen extends StatelessWidget {
                                                   fontWeight: FontWeight.bold,
                                                   color: _getPerformanceColor(
                                                     accuracy,
-                                                  ).withOpacity(0.8),
+                                                  ).withValues(alpha: 0.8),
                                                 ),
                                               ),
                                             ],
@@ -412,7 +412,7 @@ class LeaderboardScreen extends StatelessWidget {
                                                 Divider(
                                                   color: Theme.of(context)
                                                       .dividerColor
-                                                      .withOpacity(0.1),
+                                                      .withValues(alpha: 0.1),
                                                 ),
                                                 const SizedBox(height: 8),
                                                 Row(
@@ -454,7 +454,7 @@ class LeaderboardScreen extends StatelessWidget {
                                                   decoration: BoxDecoration(
                                                     color: _getPerformanceColor(
                                                       accuracy,
-                                                    ).withOpacity(0.1),
+                                                    ).withValues(alpha: 0.1),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           20,
@@ -463,7 +463,7 @@ class LeaderboardScreen extends StatelessWidget {
                                                       color:
                                                           _getPerformanceColor(
                                                             accuracy,
-                                                          ).withOpacity(0.2),
+                                                          ).withValues(alpha: 0.2),
                                                     ),
                                                   ),
                                                   child: Text(
@@ -527,7 +527,7 @@ class LeaderboardScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 10,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
       ],
@@ -582,11 +582,11 @@ class LeaderboardScreen extends StatelessWidget {
           padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             border: Border.all(color: color, width: isFirst ? 3 : 2),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.4),
+                color: color.withValues(alpha: 0.4),
                 blurRadius: 15,
                 spreadRadius: 2,
               ),
@@ -605,16 +605,16 @@ class LeaderboardScreen extends StatelessWidget {
           width: isFirst ? 110 : 90,
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withOpacity(0.9),
+            color: Theme.of(context).cardColor.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
             ],
-            border: Border.all(color: color.withOpacity(0.3), width: 1),
+            border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
           ),
           child: Column(
             children: [
@@ -649,16 +649,16 @@ class LeaderboardScreen extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [color.withOpacity(0.9), color.withOpacity(0.3)],
+              colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.3)],
             ),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(16),
               topRight: Radius.circular(16),
             ),
-            border: Border.all(color: color.withOpacity(0.5), width: 1),
+            border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 blurRadius: 10,
                 spreadRadius: 1,
               ),

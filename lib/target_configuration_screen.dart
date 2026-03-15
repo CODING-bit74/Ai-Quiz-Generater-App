@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'screens/credit_history_screen.dart';
 import 'screens/earn_credits_screen.dart';
@@ -50,7 +49,7 @@ class TargetConfigurationScreen extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: isDark
                 ? [
-                    const Color(0xFF1E293B).withOpacity(0.5),
+                    const Color(0xFF1E293B).withValues(alpha: 0.5),
                     const Color(0xFF0F172A),
                   ]
                 : [Colors.white, const Color(0xFFF1F5F9)],
@@ -137,7 +136,7 @@ class TargetConfigurationScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -169,7 +168,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                 onPressed: () => _showLogoutDialog(context),
                 icon: Icon(
                   Icons.logout_rounded,
-                  color: Colors.redAccent.withOpacity(0.8),
+                  color: Colors.redAccent.withValues(alpha: 0.8),
                 ),
                 tooltip: "Logout",
               ),
@@ -201,16 +200,16 @@ class TargetConfigurationScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? const Color(0xFF1E293B).withOpacity(0.85)
-                          : Colors.white.withOpacity(0.95),
+                          ? const Color(0xFF1E293B).withValues(alpha: 0.85)
+                          : Colors.white.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: Colors.white.withOpacity(isDark ? 0.1 : 0.5),
+                        color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.5),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -222,7 +221,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.redAccent.withOpacity(0.1),
+                            color: Colors.redAccent.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -248,7 +247,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                           style: TextStyle(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.7),
+                            ).colorScheme.onSurface.withValues(alpha: 0.7),
                             fontSize: 14,
                             height: 1.5,
                           ),
@@ -268,7 +267,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                     side: BorderSide(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.onSurface.withOpacity(0.1),
+                                      ).colorScheme.onSurface.withValues(alpha: 0.1),
                                     ),
                                   ),
                                 ),
@@ -277,7 +276,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                   style: TextStyle(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onSurface.withOpacity(0.6),
+                                    ).colorScheme.onSurface.withValues(alpha: 0.6),
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1,
                                     fontSize: 12,
@@ -324,7 +323,7 @@ class TargetConfigurationScreen extends StatelessWidget {
           },
         ),
       ),
-      barrierColor: Colors.black.withOpacity(0.5),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
     );
   }
 
@@ -355,10 +354,10 @@ class TargetConfigurationScreen extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor.withOpacity(0.05),
+          color: Theme.of(context).cardColor.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
           ),
         ),
         child: Row(
@@ -369,10 +368,10 @@ class TargetConfigurationScreen extends StatelessWidget {
               width: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: rankColor.withOpacity(0.5), width: 3),
+                border: Border.all(color: rankColor.withValues(alpha: 0.5), width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: rankColor.withOpacity(0.2),
+                    color: rankColor.withValues(alpha: 0.2),
                     blurRadius: 15,
                     spreadRadius: 2,
                   ),
@@ -439,14 +438,15 @@ class TargetConfigurationScreen extends StatelessWidget {
                         .getTargetMissionsToNextRank(targetExam);
 
                     Color rankColor = Colors.blueGrey;
-                    if (rankTitle == "LEGEND")
+                    if (rankTitle == "LEGEND") {
                       rankColor = Colors.amber;
-                    else if (rankTitle == "MASTER")
+                    } else if (rankTitle == "MASTER") {
                       rankColor = Colors.purpleAccent;
-                    else if (rankTitle == "COMMANDER")
+                    } else if (rankTitle == "COMMANDER") {
                       rankColor = Colors.blue;
-                    else if (rankTitle == "OFFICER")
+                    } else if (rankTitle == "OFFICER") {
                       rankColor = Colors.cyan;
+                    }
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,10 +473,10 @@ class TargetConfigurationScreen extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: rankColor.withOpacity(0.1),
+                                color: rankColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: rankColor.withOpacity(0.3),
+                                  color: rankColor.withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Text(
@@ -501,18 +501,18 @@ class TargetConfigurationScreen extends StatelessWidget {
                               size: 12,
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.5),
+                              ).colorScheme.onSurface.withValues(alpha: 0.5),
                             ),
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                "${quizController.selectedSector.value} • ${targetExam}",
+                                "${quizController.selectedSector.value} • $targetExam",
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.onSurface.withOpacity(0.6),
+                                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -532,7 +532,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                 minHeight: 6,
                                 backgroundColor: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.05),
+                                ).colorScheme.onSurface.withValues(alpha: 0.05),
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   rankColor,
                                 ),
@@ -548,7 +548,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                 fontStyle: FontStyle.italic,
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.4),
+                                ).colorScheme.onSurface.withValues(alpha: 0.4),
                               ),
                             ),
                           ],
@@ -561,12 +561,12 @@ class TargetConfigurationScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.03),
+                            ).colorScheme.onSurface.withValues(alpha: 0.03),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.05),
+                              ).colorScheme.onSurface.withValues(alpha: 0.05),
                             ),
                           ),
                           child: Column(
@@ -585,7 +585,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.7),
+                                            .withValues(alpha: 0.7),
                                         letterSpacing: 0.5,
                                       ),
                                       overflow: TextOverflow.ellipsis,
@@ -598,7 +598,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.orange.withOpacity(0.1),
+                                      color: Colors.orange.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Row(
@@ -638,7 +638,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                         backgroundColor: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.05),
+                                            .withValues(alpha: 0.05),
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
                                               Colors.greenAccent,
@@ -654,7 +654,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.onSurface.withOpacity(0.6),
+                                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                                     ),
                                   ),
                                 ],
@@ -668,7 +668,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                   fontSize: 9,
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.onSurface.withOpacity(0.4),
+                                  ).colorScheme.onSurface.withValues(alpha: 0.4),
                                 ),
                               ),
                             ],
@@ -690,7 +690,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                         Container(
                           width: 1,
                           height: 20,
-                          color: Colors.grey.withOpacity(0.3),
+                          color: Colors.grey.withValues(alpha: 0.3),
                         ),
                         const SizedBox(width: 16),
                         GestureDetector(
@@ -736,7 +736,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                         Container(
                           width: 1,
                           height: 20,
-                          color: Colors.grey.withOpacity(0.3),
+                          color: Colors.grey.withValues(alpha: 0.3),
                         ),
                         const SizedBox(width: 16),
                         _buildMiniStat(
@@ -768,7 +768,7 @@ class TargetConfigurationScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 10,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
       ],
@@ -790,7 +790,7 @@ class TargetConfigurationScreen extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.2,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const Spacer(),
@@ -854,18 +854,18 @@ class TargetConfigurationScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? (isDark ? Colors.white.withOpacity(0.1) : Colors.white)
+                ? (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected
-                  ? Colors.blue.withOpacity(0.3)
+                  ? Colors.blue.withValues(alpha: 0.3)
                   : Colors.transparent,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       spreadRadius: 1,
                     ),
@@ -879,7 +879,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                 size: 20,
                 color: isSelected
                     ? Colors.blue
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               const SizedBox(width: 8),
               if (isSelected)
@@ -962,11 +962,11 @@ class TargetConfigurationScreen extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
-              ? [Colors.blue.withOpacity(0.2), Colors.blue.withOpacity(0.05)]
-              : [Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.02)],
+              ? [Colors.blue.withValues(alpha: 0.2), Colors.blue.withValues(alpha: 0.05)]
+              : [Colors.blue.withValues(alpha: 0.1), Colors.blue.withValues(alpha: 0.02)],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -976,7 +976,7 @@ class TargetConfigurationScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -1015,7 +1015,7 @@ class TargetConfigurationScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               letterSpacing: 1.2,
             ),
           ),
@@ -1036,9 +1036,9 @@ class TargetConfigurationScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1101,15 +1101,15 @@ class TargetConfigurationScreen extends StatelessWidget {
                           if (val) controller.setSubject(subject);
                         },
                         backgroundColor: isDark
-                            ? Colors.white.withOpacity(0.05)
-                            : Colors.black.withOpacity(0.05),
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.black.withValues(alpha: 0.05),
                         selectedColor: Colors.purple[700],
                         labelStyle: TextStyle(
                           color: isSelected
                               ? Colors.white
                               : Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
+                                ).colorScheme.onSurface.withValues(alpha: 0.6),
                           fontWeight: isSelected
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -1122,7 +1122,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                                 ? Colors.purple
                                 : Theme.of(
                                     context,
-                                  ).colorScheme.onSurface.withOpacity(0.1),
+                                  ).colorScheme.onSurface.withValues(alpha: 0.1),
                           ),
                         ),
                         showCheckmark: false,
@@ -1144,10 +1144,11 @@ class TargetConfigurationScreen extends StatelessWidget {
     bool isDark,
   ) {
     String title = "Resource Material";
-    if (controller.selectedType.value == 'Topic')
+    if (controller.selectedType.value == 'Topic') {
       title = "Concept Topic";
-    else if (controller.selectedType.value == 'Document')
+    } else if (controller.selectedType.value == 'Document') {
       title = "Upload PDF/Text";
+    }
 
     return _buildGlassCard(
       context,
@@ -1198,14 +1199,14 @@ class TargetConfigurationScreen extends StatelessWidget {
                           filled: true,
                           fillColor: isDark
                               ? Colors.black26
-                              : Colors.white.withOpacity(0.5),
+                              : Colors.white.withValues(alpha: 0.5),
                           hintText: controller.selectedType.value == 'Link'
                               ? "Paste URL here..."
                               : "Enter topic/keyword for PYQ Search...",
                           hintStyle: TextStyle(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.3),
+                            ).colorScheme.onSurface.withValues(alpha: 0.3),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1317,7 +1318,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                 style: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.6),
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1364,6 +1365,7 @@ class TargetConfigurationScreen extends StatelessWidget {
 
           // 1. Validate Credits
           bool success = await economyController.deductCredits(cost);
+          if (!context.mounted) return;
           if (!success) return;
 
           // 2. Validate Inputs
@@ -1416,7 +1418,7 @@ class TargetConfigurationScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.4),
+                color: Colors.blue.withValues(alpha: 0.4),
                 blurRadius: 20,
                 spreadRadius: 2,
                 offset: const Offset(0, 4),
@@ -1457,21 +1459,21 @@ class TargetConfigurationScreen extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withOpacity(0.05),
+            color: Theme.of(context).cardColor.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withOpacity(0.1)),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
           ),
           child: Column(
             children: [
               Icon(
                 Icons.history_toggle_off_rounded,
                 size: 40,
-                color: Colors.grey.withOpacity(0.3),
+                color: Colors.grey.withValues(alpha: 0.3),
               ),
               const SizedBox(height: 8),
               Text(
                 "No past missions found.",
-                style: TextStyle(color: Colors.grey.withOpacity(0.5)),
+                style: TextStyle(color: Colors.grey.withValues(alpha: 0.5)),
               ),
             ],
           ),
@@ -1492,9 +1494,9 @@ class TargetConfigurationScreen extends StatelessWidget {
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).cardColor.withOpacity(0.05),
+                color: Theme.of(context).cardColor.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1507,7 +1509,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                         date,
                         style: TextStyle(
                           fontSize: 10,
-                          color: Colors.grey.withOpacity(0.5),
+                          color: Colors.grey.withValues(alpha: 0.5),
                         ),
                       ),
                     ],
@@ -1546,7 +1548,7 @@ class TargetConfigurationScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -1572,13 +1574,13 @@ class TargetConfigurationScreen extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.white.withOpacity(0.03)
-                : Colors.black.withOpacity(0.03),
+                ? Colors.white.withValues(alpha: 0.03)
+                : Colors.black.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.black.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.05),
             ),
           ),
           child: child,
@@ -1591,7 +1593,7 @@ class TargetConfigurationScreen extends StatelessWidget {
     return Text(
       text,
       style: TextStyle(
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
@@ -1606,10 +1608,10 @@ class TargetConfigurationScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.black26 : Colors.white.withOpacity(0.5),
+        color: isDark ? Colors.black26 : Colors.white.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
         ),
       ),
       child: DropdownButtonHideUnderline(child: child),
@@ -1628,9 +1630,9 @@ class TargetConfigurationScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
+              color: Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.withOpacity(0.3)),
+              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -1682,11 +1684,11 @@ class TargetConfigurationScreen extends StatelessWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.03),
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.blue.withOpacity(0.3),
+                  color: Colors.blue.withValues(alpha: 0.3),
                   // style: BorderStyle.solid, // Default
                 ),
               ),
@@ -1696,7 +1698,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                   Icon(
                     Icons.cloud_upload_rounded,
                     size: 32,
-                    color: Colors.blue.withOpacity(0.8),
+                    color: Colors.blue.withValues(alpha: 0.8),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -1730,7 +1732,7 @@ class TargetConfigurationScreen extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.redAccent.withOpacity(0.4),
+              color: Colors.redAccent.withValues(alpha: 0.4),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -1741,7 +1743,7 @@ class TargetConfigurationScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -1766,7 +1768,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                   Text(
                     "Generate quizzes directly from YouTube videos",
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 12,
                     ),
                   ),
@@ -1799,7 +1801,7 @@ class TargetConfigurationScreen extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.amber.withOpacity(0.4),
+              color: Colors.amber.withValues(alpha: 0.4),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -1810,7 +1812,7 @@ class TargetConfigurationScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -1835,7 +1837,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                   Text(
                     "Check the top ranked commanders",
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 12,
                     ),
                   ),
@@ -1903,10 +1905,10 @@ class TargetConfigurationScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? color.withOpacity(0.15)
+                      ? color.withValues(alpha: 0.15)
                       : (isDark
-                            ? Colors.white.withOpacity(0.05)
-                            : Colors.white.withOpacity(0.6)),
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.white.withValues(alpha: 0.6)),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected
@@ -1917,7 +1919,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: color.withOpacity(0.2),
+                            color: color.withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -1938,7 +1940,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                             ? (isDark ? Colors.white : Colors.black)
                             : Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.8),
+                              ).colorScheme.onSurface.withValues(alpha: 0.8),
                         fontSize: 13,
                       ),
                     ),
@@ -1951,7 +1953,7 @@ class TargetConfigurationScreen extends StatelessWidget {
                         fontSize: 10,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],

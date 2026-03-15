@@ -117,13 +117,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 ),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.05),
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -168,7 +168,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.blue.withOpacity(0.3),
+                          Colors.blue.withValues(alpha: 0.3),
                           Colors.transparent,
                         ],
                       ),
@@ -193,7 +193,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFF6366F1).withOpacity(0.3),
+                          const Color(0xFF6366F1).withValues(alpha: 0.3),
                           Colors.transparent,
                         ],
                       ),
@@ -253,12 +253,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: Colors.white.withOpacity(0.1),
+                                          color: Colors.white.withValues(alpha: 0.1),
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.blue.withOpacity(
-                                              0.15,
+                                            color: Colors.blue.withValues(
+                                              alpha: 0.15,
                                             ),
                                             blurRadius: 40,
                                             spreadRadius: 5,
@@ -281,7 +281,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: Colors.blue.withOpacity(0.3),
+                                            color: Colors.blue.withValues(alpha: 0.3),
                                             width: 1.5,
                                           ),
                                         ),
@@ -414,16 +414,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                 decoration: BoxDecoration(
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.surface.withOpacity(0.5),
+                                  ).colorScheme.surface.withValues(alpha: 0.5),
                                   borderRadius: BorderRadius.circular(30),
                                   border: Border.all(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onSurface.withOpacity(0.1),
+                                    ).colorScheme.onSurface.withValues(alpha: 0.1),
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: Colors.black.withValues(alpha: 0.05),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -501,7 +501,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                   BoxShadow(
                                     color: const Color(
                                       0xFF3B82F6,
-                                    ).withOpacity(0.4),
+                                    ).withValues(alpha: 0.4),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
                                   ),
@@ -537,7 +537,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         style: TextStyle(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.3),
+                          ).colorScheme.onSurface.withValues(alpha: 0.3),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -564,10 +564,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           height: 200,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.blueAccent.withOpacity(0.2)),
+            border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.2)),
             boxShadow: [
               BoxShadow(
-                color: Colors.blueAccent.withOpacity(0.2),
+                color: Colors.blueAccent.withValues(alpha: 0.2),
                 blurRadius: 50,
                 spreadRadius: 10,
               ),
@@ -580,7 +580,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: Colors.blueAccent.withOpacity(0.5),
+              color: Colors.blueAccent.withValues(alpha: 0.5),
               width: 2,
             ),
           ),
@@ -608,7 +608,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -653,12 +653,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             ),
             boxShadow: [
               BoxShadow(
-                color: (isDark ? Colors.blue : Colors.orange).withOpacity(0.4),
+                color: (isDark ? Colors.blue : Colors.orange).withValues(alpha: 0.4),
                 blurRadius: 20,
                 spreadRadius: 2,
               ),
             ],
-            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(32.5),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:ui';
 import 'package:flutter/services.dart'; // For Clipboard
 import 'quiz_screen.dart'; // Ensure this import exists for navigation
 import 'controllers/quiz_controller.dart'; // Ensure this import exists
@@ -110,7 +109,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
           "Link Pasted",
           "YouTube link detected!",
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withOpacity(0.8),
+          backgroundColor: Colors.green.withValues(alpha: 0.8),
           colorText: Colors.white,
           margin: const EdgeInsets.all(16),
           borderRadius: 16,
@@ -121,7 +120,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
           "No Link Found",
           "Clipboard does not contain a valid YouTube link",
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange.withOpacity(0.8),
+          backgroundColor: Colors.orange.withValues(alpha: 0.8),
           colorText: Colors.white,
           margin: const EdgeInsets.all(16),
           borderRadius: 16,
@@ -136,7 +135,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
         "Oops!",
         "Please enter a YouTube URL",
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withOpacity(0.8),
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
         colorText: Colors.white,
         margin: const EdgeInsets.all(16),
         borderRadius: 16,
@@ -191,7 +190,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).cardColor.withOpacity(0.5),
+              color: Theme.of(context).cardColor.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -230,7 +229,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.redAccent.withOpacity(0.2),
+                          Colors.redAccent.withValues(alpha: 0.2),
                           Colors.transparent,
                         ],
                       ),
@@ -255,7 +254,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.blueAccent.withOpacity(0.2),
+                          Colors.blueAccent.withValues(alpha: 0.2),
                           Colors.transparent,
                         ],
                       ),
@@ -280,17 +279,17 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
+                          color: Colors.red.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.red.withOpacity(0.2),
+                              color: Colors.red.withValues(alpha: 0.2),
                               blurRadius: 30,
                               spreadRadius: 10,
                             ),
                           ],
                           border: Border.all(
-                            color: Colors.red.withOpacity(0.5),
+                            color: Colors.red.withValues(alpha: 0.5),
                             width: 2,
                           ),
                         ),
@@ -331,7 +330,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                           height: 1.5,
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -350,15 +349,15 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor.withOpacity(0.4),
+                          color: Theme.of(context).cardColor.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(30),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -386,12 +385,12 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                                 hintStyle: TextStyle(
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.onSurface.withOpacity(0.3),
+                                  ).colorScheme.onSurface.withValues(alpha: 0.3),
                                 ),
                                 filled: true,
                                 fillColor: Theme.of(
                                   context,
-                                ).scaffoldBackgroundColor.withOpacity(0.5),
+                                ).scaffoldBackgroundColor.withValues(alpha: 0.5),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide.none,
@@ -426,7 +425,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                               decoration: BoxDecoration(
                                 color: Theme.of(
                                   context,
-                                ).scaffoldBackgroundColor.withOpacity(0.5),
+                                ).scaffoldBackgroundColor.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: DropdownButtonHideUnderline(
@@ -489,9 +488,9 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
                               backgroundColor: Colors.redAccent,
                               foregroundColor: Colors.white,
                               disabledBackgroundColor: Colors.redAccent
-                                  .withOpacity(0.5),
+                                  .withValues(alpha: 0.5),
                               elevation: 8,
-                              shadowColor: Colors.redAccent.withOpacity(0.4),
+                              shadowColor: Colors.redAccent.withValues(alpha: 0.4),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -601,11 +600,11 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
-              ? [Colors.blue.withOpacity(0.2), Colors.blue.withOpacity(0.05)]
-              : [Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.02)],
+              ? [Colors.blue.withValues(alpha: 0.2), Colors.blue.withValues(alpha: 0.05)]
+              : [Colors.blue.withValues(alpha: 0.1), Colors.blue.withValues(alpha: 0.02)],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -615,7 +614,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -654,7 +653,7 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               letterSpacing: 1.2,
             ),
           ),
@@ -678,14 +677,14 @@ class _YouTubeInputScreenState extends State<YouTubeInputScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(isDark ? 0.3 : 0.6),
+        color: Theme.of(context).cardColor.withValues(alpha: isDark ? 0.3 : 0.6),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

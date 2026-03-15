@@ -410,32 +410,33 @@ class QuizController extends GetxController {
     String key = 'Banking'; // Default
 
     // Simple matching logic
-    if (sector.toLowerCase().contains('bank'))
+    if (sector.toLowerCase().contains('bank')) {
       key = 'Banking';
-    else if (sector.toLowerCase().contains('ssc'))
+    } else if (sector.toLowerCase().contains('ssc')) {
       key = 'SSC';
-    else if (sector.toLowerCase().contains('railway'))
+    } else if (sector.toLowerCase().contains('railway')) {
       key = 'Railway';
-    else if (sector.toLowerCase().contains('upsc') ||
-        sector.toLowerCase().contains('civil'))
+    } else if (sector.toLowerCase().contains('upsc') ||
+        sector.toLowerCase().contains('civil')) {
       key = 'UPSC';
-    else if (sector.toLowerCase().contains('state'))
+    } else if (sector.toLowerCase().contains('state')) {
       key = 'State PSC';
-    else if (sector.toLowerCase().contains('defence'))
+    } else if (sector.toLowerCase().contains('defence')) {
       key = 'Defence';
-    else if (sector.toLowerCase().contains('teach'))
+    } else if (sector.toLowerCase().contains('teach')) {
       key = 'Teaching';
-    else if (sector.toLowerCase().contains('medic') ||
-        sector.toLowerCase().contains('neet'))
+    } else if (sector.toLowerCase().contains('medic') ||
+        sector.toLowerCase().contains('neet')) {
       key = 'Medical';
-    else if (sector.toLowerCase().contains('engineer') ||
-        sector.toLowerCase().contains('jee'))
+    } else if (sector.toLowerCase().contains('engineer') ||
+        sector.toLowerCase().contains('jee')) {
       key = 'Engineering';
-    else if (sector.toLowerCase().contains('law') ||
-        sector.toLowerCase().contains('judic'))
+    } else if (sector.toLowerCase().contains('law') ||
+        sector.toLowerCase().contains('judic')) {
       key = 'Law';
-    else if (sector.toLowerCase().contains('police'))
+    } else if (sector.toLowerCase().contains('police')) {
       key = 'Police';
+    }
 
     // Update List
     if (sectorSubjects.containsKey(key)) {
@@ -917,7 +918,7 @@ class QuizController extends GetxController {
       await _audioPlayer.stop(); // Stop any previous sound
       await _audioPlayer.play(AssetSource(soundPath), volume: 0.5);
     } catch (e) {
-      print("Error playing sound: $e");
+      debugPrint("Error playing sound: $e");
     }
   }
 

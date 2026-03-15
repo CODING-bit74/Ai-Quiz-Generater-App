@@ -32,7 +32,7 @@ class QuizScreen extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: isDark
                 ? [
-                    const Color(0xFF1E293B).withOpacity(0.5),
+                    const Color(0xFF1E293B).withValues(alpha: 0.5),
                     const Color(0xFF0F172A),
                   ]
                 : [Colors.white, const Color(0xFFF1F5F9)],
@@ -170,7 +170,7 @@ class QuizScreen extends StatelessWidget {
                   ? Icons.closed_caption_disabled_rounded
                   : Icons.error_outline_rounded,
               size: 64,
-              color: Colors.redAccent.withOpacity(0.8),
+              color: Colors.redAccent.withValues(alpha: 0.8),
             ),
             const SizedBox(height: 24),
             Text(
@@ -189,7 +189,7 @@ class QuizScreen extends StatelessWidget {
                   "Unknown error occurred.",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -259,19 +259,19 @@ class QuizScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: isDark
-                                    ? Colors.white.withOpacity(0.05)
-                                    : Colors.black.withOpacity(0.05),
+                                    ? Colors.white.withValues(alpha: 0.05)
+                                    : Colors.black.withValues(alpha: 0.05),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.blue.withOpacity(0.3 * value),
+                                    color: Colors.blue.withValues(alpha: 0.3 * value),
                                     blurRadius: 40 * value,
                                     spreadRadius: 10 * value,
                                   ),
                                 ],
                                 border: Border.all(
                                   color: isDark
-                                      ? Colors.white.withOpacity(0.2)
-                                      : Colors.black.withOpacity(0.1),
+                                      ? Colors.white.withValues(alpha: 0.2)
+                                      : Colors.black.withValues(alpha: 0.1),
                                   width: 2,
                                 ),
                               ),
@@ -302,7 +302,7 @@ class QuizScreen extends StatelessWidget {
                             letterSpacing: 2,
                             shadows: [
                               Shadow(
-                                color: Colors.blueAccent.withOpacity(0.5),
+                                color: Colors.blueAccent.withValues(alpha: 0.5),
                                 blurRadius: 20,
                               ),
                             ],
@@ -320,7 +320,7 @@ class QuizScreen extends StatelessWidget {
                           style: TextStyle(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.7),
+                            ).colorScheme.onSurface.withValues(alpha: 0.7),
                             fontSize: 13,
                             letterSpacing: 1.5,
                             fontStyle: FontStyle.italic,
@@ -338,7 +338,7 @@ class QuizScreen extends StatelessWidget {
                         child: LinearProgressIndicator(
                           backgroundColor: Theme.of(
                             context,
-                          ).dividerColor.withOpacity(0.1),
+                          ).dividerColor.withValues(alpha: 0.1),
                           color: Colors.blueAccent,
                           minHeight: 6,
                         ),
@@ -348,8 +348,9 @@ class QuizScreen extends StatelessWidget {
 
                     // Educational Tip Carousel
                     Obx(() {
-                      if (controller.currentTip.value.isEmpty)
+                      if (controller.currentTip.value.isEmpty) {
                         return const SizedBox(height: 80);
+                      }
                       return AnimatedSwitcher(
                         duration: const Duration(milliseconds: 500),
                         child: Container(
@@ -357,16 +358,16 @@ class QuizScreen extends StatelessWidget {
                           margin: const EdgeInsets.symmetric(horizontal: 30),
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor.withOpacity(0.8),
+                            color: Theme.of(context).cardColor.withValues(alpha: 0.8),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: Theme.of(
                                 context,
-                              ).dividerColor.withOpacity(0.2),
+                              ).dividerColor.withValues(alpha: 0.2),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 15,
                                 offset: const Offset(0, 5),
                               ),
@@ -403,7 +404,7 @@ class QuizScreen extends StatelessWidget {
                                   height: 1.4,
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.onSurface.withOpacity(0.8),
+                                  ).colorScheme.onSurface.withValues(alpha: 0.8),
                                   fontStyle: FontStyle.italic,
                                 ),
                               ),
@@ -429,10 +430,10 @@ class QuizScreen extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.4),
+            color: color.withValues(alpha: 0.4),
             blurRadius: 100,
             spreadRadius: 20,
           ),
@@ -488,7 +489,7 @@ class QuizScreen extends StatelessWidget {
                         controller.questions.length,
                     backgroundColor: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.1),
+                    ).colorScheme.onSurface.withValues(alpha: 0.1),
                     color: Colors.blueAccent,
                     minHeight: 6,
                   ),
@@ -507,10 +508,10 @@ class QuizScreen extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.blueAccent.withOpacity(0.1),
+                      color: Colors.blueAccent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.blueAccent.withOpacity(0.3),
+                        color: Colors.blueAccent.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -544,7 +545,7 @@ class QuizScreen extends StatelessWidget {
                       style: TextStyle(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.5),
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.5,
@@ -562,11 +563,11 @@ class QuizScreen extends StatelessWidget {
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: Theme.of(context).dividerColor.withOpacity(0.1),
+                    color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -579,7 +580,7 @@ class QuizScreen extends StatelessWidget {
                     Icon(
                       Icons.format_quote_rounded,
                       size: 40,
-                      color: Theme.of(context).primaryColor.withOpacity(0.2),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -635,7 +636,7 @@ class QuizScreen extends StatelessWidget {
                     letterSpacing: 2,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.4),
+                    ).colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
               ),
@@ -653,16 +654,16 @@ class QuizScreen extends StatelessWidget {
 
               Color borderColor = Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.1);
+              ).colorScheme.onSurface.withValues(alpha: 0.1);
               Color bgColor = Theme.of(context).cardColor;
               Color textColor = Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.8);
+              ).colorScheme.onSurface.withValues(alpha: 0.8);
 
               // Visual feedback for selection
               if (isSelected) {
                 borderColor = Colors.blueAccent;
-                bgColor = Colors.blueAccent.withOpacity(0.1);
+                bgColor = Colors.blueAccent.withValues(alpha: 0.1);
                 textColor = Colors.blueAccent;
               }
 
@@ -704,7 +705,7 @@ class QuizScreen extends StatelessWidget {
                                   ? Colors.blueAccent
                                   : Theme.of(
                                       context,
-                                    ).dividerColor.withOpacity(0.5),
+                                    ).dividerColor.withValues(alpha: 0.5),
                               width: 2,
                             ),
                           ),
@@ -751,7 +752,9 @@ class QuizScreen extends StatelessWidget {
 
   /// Interactive results breakdown and post-game actions
   Widget _buildResultsView(BuildContext context, QuizController controller) {
-    if (controller.questions.isEmpty) return const SizedBox.shrink();
+    if (controller.questions.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     // Stats calculations
     final percentage =
@@ -809,21 +812,21 @@ class QuizScreen extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                        Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
                         Theme.of(
                           context,
-                        ).scaffoldBackgroundColor.withOpacity(0.95),
+                        ).scaffoldBackgroundColor.withValues(alpha: 0.95),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(40),
                     border: Border.all(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.1),
+                      ).colorScheme.onSurface.withValues(alpha: 0.1),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 40,
                         spreadRadius: 5,
                         offset: const Offset(0, 20),
@@ -846,7 +849,7 @@ class QuizScreen extends StatelessWidget {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: gradientColors.first.withOpacity(0.4),
+                                  color: gradientColors.first.withValues(alpha: 0.4),
                                   blurRadius: 30,
                                   spreadRadius: 8,
                                 ),
@@ -880,7 +883,7 @@ class QuizScreen extends StatelessWidget {
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 10,
-                                        color: Colors.grey.withOpacity(0.7),
+                                        color: Colors.grey.withValues(alpha: 0.7),
                                       ),
                                     ),
                                   ],
@@ -890,9 +893,7 @@ class QuizScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(10),
                                   child: LinearProgressIndicator(
                                     value: historyController.rankProgress,
-                                    backgroundColor: Colors.grey.withOpacity(
-                                      0.1,
-                                    ),
+                                    backgroundColor: Colors.grey.withValues(alpha: 0.1),
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                       gradientColors.first,
                                     ),
@@ -904,7 +905,7 @@ class QuizScreen extends StatelessWidget {
                                   "${historyController.missionsToNextRank} missions to promotion",
                                   style: TextStyle(
                                     fontSize: 9,
-                                    color: Colors.grey.withOpacity(0.6),
+                                    color: Colors.grey.withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
@@ -951,7 +952,7 @@ class QuizScreen extends StatelessWidget {
                           letterSpacing: 2,
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.4),
+                          ).colorScheme.onSurface.withValues(alpha: 0.4),
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -1002,7 +1003,7 @@ class QuizScreen extends StatelessWidget {
                         side: BorderSide(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.1),
+                          ).colorScheme.onSurface.withValues(alpha: 0.1),
                         ),
                       ),
                     ),
@@ -1028,7 +1029,7 @@ class QuizScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blue.withOpacity(0.3),
+                          color: Colors.blue.withValues(alpha: 0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 8),
                         ),
@@ -1090,7 +1091,7 @@ class QuizScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             letterSpacing: 1,
           ),
         ),
@@ -1161,14 +1162,14 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(isDark ? 0.05 : 0.02),
+                ).colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.02),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isCorrect
-                      ? Colors.green.withOpacity(0.5)
+                      ? Colors.green.withValues(alpha: 0.5)
                       : (isSkipped
-                            ? Colors.orange.withOpacity(0.5)
-                            : Colors.red.withOpacity(0.5)),
+                            ? Colors.orange.withValues(alpha: 0.5)
+                            : Colors.red.withValues(alpha: 0.5)),
                 ),
               ),
               child: Column(
@@ -1184,10 +1185,10 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
                         ),
                         decoration: BoxDecoration(
                           color: isCorrect
-                              ? Colors.green.withOpacity(0.2)
+                              ? Colors.green.withValues(alpha: 0.2)
                               : (isSkipped
-                                    ? Colors.orange.withOpacity(0.2)
-                                    : Colors.red.withOpacity(0.2)),
+                                    ? Colors.orange.withValues(alpha: 0.2)
+                                    : Colors.red.withValues(alpha: 0.2)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -1246,11 +1247,11 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
                     IconData? icon;
 
                     if (isThisCorrect) {
-                      tileColor = Colors.green.withOpacity(0.1);
+                      tileColor = Colors.green.withValues(alpha: 0.1);
                       contentColor = Colors.green;
                       icon = Icons.check_circle;
                     } else if (isSelected) {
-                      tileColor = Colors.red.withOpacity(0.1);
+                      tileColor = Colors.red.withValues(alpha: 0.1);
                       contentColor = Colors.red;
                       icon = Icons.cancel;
                     }
@@ -1265,7 +1266,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
                         color: tileColor,
                         borderRadius: BorderRadius.circular(12),
                         border: isThisCorrect || isSelected
-                            ? Border.all(color: contentColor.withOpacity(0.5))
+                            ? Border.all(color: contentColor.withValues(alpha: 0.5))
                             : null,
                       ),
                       child: Row(
@@ -1281,7 +1282,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
                                           : Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withOpacity(0.6)),
+                                                .withValues(alpha: 0.6)),
                                 fontWeight: isThisCorrect || isSelected
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -1300,7 +1301,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
                     padding: const EdgeInsets.all(12),
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -1321,7 +1322,7 @@ Widget _buildReviewView(BuildContext context, QuizController controller) {
                           style: TextStyle(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.8),
+                            ).colorScheme.onSurface.withValues(alpha: 0.8),
                             fontSize: 13,
                             fontStyle: FontStyle.italic,
                           ),
