@@ -1,6 +1,13 @@
-# Import Flask for API routing and JSON utilities
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+
+@app.route('/ping')
+def ping():
+    return jsonify({"status": "pong"}), 200
+
 # Knowledge base and generation logic
 from rag_service import RAGService, TranscriptNotFoundError
 from agentic_service import QuizAgent  # Import the new Agent
@@ -27,13 +34,11 @@ except Exception as e:
     print(f"⚠️ Warning: Redis connection failed. Caching will be disabled. Error: {e}")
     redis_client = None
 
-# Initialize the Flask application
-app = Flask(__name__)
-CORS(app) # Enable CORS for all routes
-
+# --- CONFIGURATION & MIDDLEWARE ---
 @app.errorhandler(Exception)
 def handle_exception(e):
     import traceback
+    # Return JSON error even in case of system-level crashes
     return jsonify({
         "error": "Internal Server Error",
         "message": str(e),
