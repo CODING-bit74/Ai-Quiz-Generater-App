@@ -161,7 +161,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -217,7 +217,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -237,7 +237,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
-                      color: Colors.blue.withOpacity(0.8), // Refined opacity
+                      color: Colors.blue.withValues(alpha: 0.8), // Refined opacity
                       letterSpacing: 1.5,
                     ),
                   ),
@@ -257,7 +257,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -279,7 +279,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withOpacity(0.05)
+                      ? Colors.white.withValues(alpha: 0.05)
                       : Colors.grey[200],
                   borderRadius: BorderRadius.circular(5),
                 ),
@@ -297,7 +297,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                   borderRadius: BorderRadius.circular(5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.withOpacity(0.3),
+                      color: Colors.blue.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -369,10 +369,10 @@ class _SyllabusScreenState extends State<SyllabusScreen>
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blue.withOpacity(0.1)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(isDark ? 0.05 : 0.02),
+            color: Colors.blue.withValues(alpha: isDark ? 0.05 : 0.02),
             blurRadius: 10,
           ),
         ],
@@ -385,7 +385,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -501,7 +501,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -536,10 +536,10 @@ class _SyllabusScreenState extends State<SyllabusScreen>
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.blue.withOpacity(0.05)),
+          border: Border.all(color: Colors.blue.withValues(alpha: 0.05)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -577,12 +577,12 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                     decoration: BoxDecoration(
                       color: isDark
                           ? Colors.white10
-                          : Colors.blue.withOpacity(0.05),
+                          : Colors.blue.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isDark
                             ? Colors.white10
-                            : Colors.blue.withOpacity(0.1),
+                            : Colors.blue.withValues(alpha: 0.1),
                       ),
                     ),
                     child: Text(
@@ -620,8 +620,8 @@ class _SyllabusScreenState extends State<SyllabusScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF1E293B).withOpacity(0.5)
-            : Colors.white.withOpacity(0.5),
+            ? const Color(0xFF1E293B).withValues(alpha: 0.5)
+            : Colors.white.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -645,7 +645,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.blue.withOpacity(0.4),
+                            color: Colors.blue.withValues(alpha: 0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -673,7 +673,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.blue,
-                                Colors.blue.withOpacity(0.1),
+                                Colors.blue.withValues(alpha: 0.1),
                               ],
                             ),
                           ),
@@ -692,7 +692,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                          color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -700,7 +700,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
                       border: Border.all(
                         color: isDark
                             ? Colors.white10
-                            : Colors.grey.withOpacity(0.1),
+                            : Colors.grey.withValues(alpha: 0.1),
                       ),
                     ),
                     child: Column(
@@ -766,7 +766,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, size: 16, color: color),
@@ -781,7 +781,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
           style: TextStyle(
             color: Theme.of(
               context,
-            ).textTheme.bodySmall?.color?.withOpacity(0.6),
+            ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
             fontSize: 10,
           ),
         ),
@@ -802,10 +802,10 @@ class _SyllabusScreenState extends State<SyllabusScreen>
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.green.withOpacity(0.2)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.05),
+            color: Colors.green.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -821,7 +821,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Divider(color: Colors.grey.withOpacity(0.1), height: 1),
+            child: Divider(color: Colors.grey.withValues(alpha: 0.1), height: 1),
           ),
           _buildEligibilityRow(
             Icons.school_rounded,
@@ -832,7 +832,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
           if (eligibility['nationality'] != null) ...[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Divider(color: Colors.grey.withOpacity(0.1), height: 1),
+              child: Divider(color: Colors.grey.withValues(alpha: 0.1), height: 1),
             ),
             _buildEligibilityRow(
               Icons.flag_rounded,
@@ -858,7 +858,7 @@ class _SyllabusScreenState extends State<SyllabusScreen>
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: color, size: 22),

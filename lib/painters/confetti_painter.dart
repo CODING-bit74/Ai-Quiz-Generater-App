@@ -18,7 +18,7 @@ class ConfettiPainter extends CustomPainter {
     final random = Random();
 
     for (int i = 0; i < 50; i++) {
-      paint.color = colors[random.nextInt(colors.length)].withOpacity(0.8);
+      paint.color = colors[random.nextInt(colors.length)].withValues(alpha: 0.8);
       final double x = random.nextDouble() * size.width;
       final double y = random.nextDouble() * size.height;
       final double r = random.nextDouble() * 5 + 2;

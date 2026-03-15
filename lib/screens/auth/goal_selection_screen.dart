@@ -73,7 +73,7 @@ class GoalSelectionScreen extends StatelessWidget {
             onPressed: () => Get.back(),
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.blue.withOpacity(0.1),
+              backgroundColor: Colors.blue.withValues(alpha: 0.1),
               foregroundColor: Colors.blue,
             ),
           ),
@@ -91,7 +91,7 @@ class GoalSelectionScreen extends StatelessWidget {
             "Select the specific domain of your target exam",
             style: TextStyle(
               fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -110,13 +110,13 @@ class GoalSelectionScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.blue.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.blue.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: isDark
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.blue.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.blue.withValues(alpha: 0.1),
               ),
             ),
             child: Column(
@@ -126,7 +126,7 @@ class GoalSelectionScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                   ),
                   child: const Icon(
                     Icons.account_balance_rounded,
@@ -148,7 +148,7 @@ class GoalSelectionScreen extends StatelessWidget {
                   "Browse Exams",
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.blue.withOpacity(0.7),
+                    color: Colors.blue.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w600,
                   ),
                 ),

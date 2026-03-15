@@ -54,7 +54,7 @@ class _AuthScreenState extends State<AuthScreen>
       Get.snackbar(
         "Access Denied",
         "Credentials incomplete. Please fill all fields.",
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
         icon: const Icon(Icons.error_outline, color: Colors.white),
       );
@@ -74,7 +74,7 @@ class _AuthScreenState extends State<AuthScreen>
       Get.snackbar(
         "Protocol Initiated",
         "Verification link sent. Check secure frequency (email).",
-        backgroundColor: Colors.blue.withOpacity(0.8),
+        backgroundColor: Colors.blue.withValues(alpha: 0.8),
         colorText: Colors.white,
         duration: const Duration(seconds: 5),
         icon: const Icon(Icons.mark_email_read, color: Colors.white),
@@ -84,7 +84,7 @@ class _AuthScreenState extends State<AuthScreen>
       Get.snackbar(
         "System Error",
         error,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
         icon: const Icon(Icons.warning_amber_rounded, color: Colors.white),
       );
@@ -143,14 +143,14 @@ class _AuthScreenState extends State<AuthScreen>
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             border: Border.all(
-                              color: Colors.cyanAccent.withOpacity(0.3),
+                              color: Colors.cyanAccent.withValues(alpha: 0.3),
                               width: 2,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.cyanAccent.withOpacity(0.2),
+                                color: Colors.cyanAccent.withValues(alpha: 0.2),
                                 blurRadius: 30,
                                 spreadRadius: 5,
                               ),
@@ -173,16 +173,16 @@ class _AuthScreenState extends State<AuthScreen>
                           child: Container(
                             padding: const EdgeInsets.all(32),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.03),
+                              color: Colors.white.withValues(alpha: 0.03),
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.08),
+                                color: Colors.white.withValues(alpha: 0.08),
                               ),
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Colors.white.withOpacity(0.05),
+                                  Colors.white.withValues(alpha: 0.05),
                                   Colors.transparent,
                                 ],
                               ),
@@ -216,8 +216,8 @@ class _AuthScreenState extends State<AuthScreen>
                                       letterSpacing: 3,
                                       shadows: [
                                         Shadow(
-                                          color: Colors.cyanAccent.withOpacity(
-                                            0.5,
+                                          color: Colors.cyanAccent.withValues(
+                                            alpha: 0.5,
                                           ),
                                           blurRadius: 10,
                                         ),
@@ -235,7 +235,7 @@ class _AuthScreenState extends State<AuthScreen>
                                         : "Initialize new personnel record",
                                     key: ValueKey<bool>(_isLogin),
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.5),
+                                      color: Colors.white.withValues(alpha: 0.5),
                                       fontSize: 12,
                                       letterSpacing: 1,
                                     ),
@@ -308,7 +308,7 @@ class _AuthScreenState extends State<AuthScreen>
                             text: TextSpan(
                               style: GoogleFonts.orbitron(
                                 fontSize: 12,
-                                color: Colors.white.withOpacity(0.6),
+                                color: Colors.white.withValues(alpha: 0.6),
                                 letterSpacing: 1,
                               ),
                               children: [
@@ -348,10 +348,10 @@ class _AuthScreenState extends State<AuthScreen>
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             blurRadius: 100,
             spreadRadius: 20,
           ),
@@ -372,9 +372,9 @@ class _AuthScreenState extends State<AuthScreen>
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: controller,
@@ -387,13 +387,13 @@ class _AuthScreenState extends State<AuthScreen>
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             fontSize: 12,
             letterSpacing: 1,
           ),
           prefixIcon: Icon(
             icon,
-            color: Colors.cyanAccent.withOpacity(0.7),
+            color: Colors.cyanAccent.withValues(alpha: 0.7),
             size: 20,
           ),
           border: InputBorder.none,
@@ -404,7 +404,7 @@ class _AuthScreenState extends State<AuthScreen>
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: Colors.cyanAccent.withOpacity(0.5),
+              color: Colors.cyanAccent.withValues(alpha: 0.5),
               width: 1,
             ),
           ),
@@ -425,7 +425,7 @@ class _AuthScreenState extends State<AuthScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.cyanAccent.withOpacity(0.2),
+            color: Colors.cyanAccent.withValues(alpha: 0.2),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),

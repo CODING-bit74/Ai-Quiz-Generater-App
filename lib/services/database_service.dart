@@ -109,7 +109,9 @@ class DatabaseService {
 
     // Proactively sync to Supabase if possible
     _syncResultToSupabase(result).catchError((e) {
-      if (kDebugMode) print("Non-blocking Supabase sync error: $e");
+      if (kDebugMode) {
+        debugPrint("Non-blocking Supabase sync error: $e");
+      }
     });
 
     return await db.insert('quiz_results', result.toMap());
@@ -132,7 +134,9 @@ class DatabaseService {
         });
       }
     } catch (e) {
-      if (kDebugMode) print("Supabase sync failed for result: $e");
+      if (kDebugMode) {
+        debugPrint("Supabase sync failed for result: $e");
+      }
     }
   }
 
@@ -171,7 +175,9 @@ class DatabaseService {
         }
       }
     } catch (e) {
-      if (kDebugMode) print("Supabase fetch error: $e");
+      if (kDebugMode) {
+        debugPrint("Supabase fetch error: $e");
+      }
     }
 
     // 2. Fallback to Local DB
@@ -202,7 +208,9 @@ class DatabaseService {
             .eq('id', userId!);
       }
     } catch (e) {
-      if (kDebugMode) print("Supabase update error: $e");
+      if (kDebugMode) {
+        debugPrint("Supabase update error: $e");
+      }
     }
 
     // 2. Always update Local DB (for offline sync later)
@@ -233,7 +241,9 @@ class DatabaseService {
         }
       }
     } catch (e) {
-      if (kDebugMode) print("Supabase bonus fetch error: $e");
+      if (kDebugMode) {
+        debugPrint("Supabase bonus fetch error: $e");
+      }
     }
 
     // 2. Fallback to Local DB
@@ -263,7 +273,9 @@ class DatabaseService {
             .eq('id', userId!);
       }
     } catch (e) {
-      if (kDebugMode) print("Supabase bonus update error: $e");
+      if (kDebugMode) {
+        debugPrint("Supabase bonus update error: $e");
+      }
     }
 
     // 2. Always update Local DB
@@ -293,7 +305,9 @@ class DatabaseService {
             .eq('user_id', userId!);
       }
     } catch (e) {
-      if (kDebugMode) print("Supabase clear error: $e");
+      if (kDebugMode) {
+        debugPrint("Supabase clear error: $e");
+      }
     }
 
     // 2. Clear Local DB
@@ -342,7 +356,9 @@ class DatabaseService {
         }
       }
     } catch (e) {
-      if (kDebugMode) print("Progress update failed: $e");
+      if (kDebugMode) {
+        debugPrint("Progress update failed: $e");
+      }
     }
   }
 
@@ -367,7 +383,9 @@ class DatabaseService {
         });
       }
     } catch (e) {
-      if (kDebugMode) print("Supabase tx error: $e");
+      if (kDebugMode) {
+        debugPrint("Supabase tx error: $e");
+      }
     }
 
     // 2. Local DB
@@ -401,7 +419,9 @@ class DatabaseService {
         }).toList();
       }
     } catch (e) {
-      if (kDebugMode) print("Supabase history error: $e");
+      if (kDebugMode) {
+        debugPrint("Supabase history error: $e");
+      }
     }
 
     // 2. Local DB Fallback
@@ -445,8 +465,9 @@ class DatabaseService {
       try {
         await db.execute('ALTER TABLE quiz_results ADD COLUMN id TEXT');
       } catch (e) {
-        if (kDebugMode)
-          print("Migration: id column already exists or table missing.");
+        if (kDebugMode) {
+          debugPrint("Migration: id column already exists or table missing.");
+        }
       }
       try {
         await db.execute('ALTER TABLE quiz_results ADD COLUMN userId TEXT');
@@ -497,8 +518,9 @@ class DatabaseService {
               FROM quiz_results_old
             ''');
           } catch (_) {
-            if (kDebugMode)
-              print("Note: Data migration skipped during v6 recreation.");
+            if (kDebugMode) {
+              debugPrint("Note: Data migration skipped during v6 recreation.");
+            }
           }
 
           // 5. Drop old table
@@ -508,7 +530,9 @@ class DatabaseService {
         });
         if (kDebugMode) print("Migration v6: Re-verified quiz_results schema.");
       } catch (e) {
-        if (kDebugMode) print("Migration v6 error: $e");
+        if (kDebugMode) {
+          debugPrint("Migration v6 error: $e");
+        }
       }
     }
   }

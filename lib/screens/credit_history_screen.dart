@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/economy_controller.dart';
@@ -43,13 +42,13 @@ class CreditHistoryScreen extends StatelessWidget {
                             Icon(
                               Icons.history_rounded,
                               size: 64,
-                              color: Colors.grey.withOpacity(0.5),
+                              color: Colors.grey.withValues(alpha: 0.5),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               "No transactions yet",
                               style: TextStyle(
-                                color: Colors.grey.withOpacity(0.5),
+                                color: Colors.grey.withValues(alpha: 0.5),
                               ),
                             ),
                           ],
@@ -87,7 +86,7 @@ class CreditHistoryScreen extends StatelessWidget {
             onPressed: () => Get.back(),
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.blue.withOpacity(0.1),
+              backgroundColor: Colors.blue.withValues(alpha: 0.1),
               foregroundColor: Colors.blue,
             ),
           ),
@@ -110,9 +109,9 @@ class CreditHistoryScreen extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
+                    color: Colors.amber.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -140,7 +139,7 @@ class CreditHistoryScreen extends StatelessWidget {
             "Transaction history of your intelligence tokens",
             style: TextStyle(
               fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -161,12 +160,12 @@ class CreditHistoryScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.1)
-              : Colors.blue.withOpacity(0.1),
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.blue.withValues(alpha: 0.1),
         ),
       ),
       child: ListTile(
@@ -177,7 +176,7 @@ class CreditHistoryScreen extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: (isBonus ? Colors.green : Colors.red).withOpacity(0.1),
+            color: (isBonus ? Colors.green : Colors.red).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(

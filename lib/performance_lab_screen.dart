@@ -22,13 +22,13 @@ class PerformanceLabScreen extends StatelessWidget {
           Positioned(
             top: -100,
             right: -50,
-            child: _buildGlowingOrb(Colors.blue.withOpacity(0.2), 300),
+            child: _buildGlowingOrb(Colors.blue.withValues(alpha: 0.2), 300),
           ),
           Positioned(
             bottom: -50,
             left: -50,
             child: _buildGlowingOrb(
-              const Color(0xFF6366F1).withOpacity(0.2),
+              const Color(0xFF6366F1).withValues(alpha: 0.2),
               250,
             ),
           ),
@@ -148,7 +148,7 @@ class PerformanceLabScreen extends StatelessWidget {
                                 fontSize: 13,
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.7),
+                                ).colorScheme.onSurface.withValues(alpha: 0.7),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -182,7 +182,7 @@ class PerformanceLabScreen extends StatelessWidget {
                         letterSpacing: 1.5,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.5),
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
@@ -205,7 +205,7 @@ class PerformanceLabScreen extends StatelessWidget {
                               size: 48,
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.3),
+                              ).colorScheme.onSurface.withValues(alpha: 0.3),
                             ),
                             const SizedBox(height: 16),
                             const Text(
@@ -269,10 +269,10 @@ class PerformanceLabScreen extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withOpacity(0.05)
-            : Colors.black.withOpacity(0.03),
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +287,7 @@ class PerformanceLabScreen extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -305,10 +305,10 @@ class PerformanceLabScreen extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF1E293B).withOpacity(0.5)
-            : Colors.white.withOpacity(0.8),
+            ? const Color(0xFF1E293B).withValues(alpha: 0.5)
+            : Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,9 +339,9 @@ class PerformanceLabScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.redAccent.withOpacity(0.1),
+          color: Colors.redAccent.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -374,10 +374,10 @@ class PerformanceLabScreen extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withOpacity(0.03)
-            : Colors.black.withOpacity(0.02),
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.02),
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.blue.withOpacity(0.1)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -455,13 +455,13 @@ class PerformanceLabScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.white.withOpacity(0.03)
-                : Colors.black.withOpacity(0.02),
+                ? Colors.white.withValues(alpha: 0.03)
+                : Colors.black.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.black.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.05),
             ),
           ),
           child: ExpansionTile(
@@ -497,7 +497,7 @@ class PerformanceLabScreen extends StatelessWidget {
                       fontSize: 10,
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.4),
+                      ).colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -510,7 +510,7 @@ class PerformanceLabScreen extends StatelessWidget {
               icon: Icon(
                 Icons.delete_outline_rounded,
                 size: 20,
-                color: Colors.redAccent.withOpacity(0.5),
+                color: Colors.redAccent.withValues(alpha: 0.5),
               ),
             ),
             children: [_buildExpandedDetails(context, res)],
@@ -535,7 +535,7 @@ class PerformanceLabScreen extends StatelessWidget {
             Icon(
               Icons.warning_amber_rounded,
               size: 48,
-              color: Colors.redAccent.withOpacity(0.8),
+              color: Colors.redAccent.withValues(alpha: 0.8),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -549,7 +549,7 @@ class PerformanceLabScreen extends StatelessWidget {
           "This action cannot be undone. You will lose this quiz history forever.",
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             fontSize: 14,
           ),
         ),
@@ -560,7 +560,7 @@ class PerformanceLabScreen extends StatelessWidget {
             child: Text(
               "CANCEL",
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
               ),
@@ -575,7 +575,7 @@ class PerformanceLabScreen extends StatelessWidget {
                 "Deleted",
                 "Record removed successfully.",
                 snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.redAccent.withOpacity(0.1),
+                backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
                 colorText: Colors.redAccent,
               );
             },
@@ -654,8 +654,8 @@ class PerformanceLabScreen extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3), width: 2),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
       ),
       child: Center(
         child: Text(
