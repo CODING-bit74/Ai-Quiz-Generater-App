@@ -31,6 +31,15 @@ except Exception as e:
 app = Flask(__name__)
 CORS(app) # Enable CORS for all routes
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    return jsonify({
+        "error": "Internal Server Error",
+        "message": str(e),
+        "traceback": traceback.format_exc()
+    }), 500
+
 # --- GLOBAL INSTANCES ---
 rag_service = None
 quiz_agent = None
