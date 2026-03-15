@@ -675,11 +675,11 @@ class QuizController extends GetxController {
       // Determine local URL based on platform/runtime
       String baseUrl;
       if (kIsWeb) {
-        baseUrl = 'http://localhost:5001';
+        baseUrl = 'https://ai-quiz-generater-app.onrender.com';
       } else if (Platform.isAndroid) {
-        baseUrl = 'http://10.0.2.2:5001';
+        baseUrl = 'https://ai-quiz-generater-app.onrender.com';
       } else {
-        baseUrl = 'http://127.0.0.1:5001';
+        baseUrl = 'https://ai-quiz-generater-app.onrender.com';
       }
 
       // Construct a Multipart request for file transmission
@@ -775,11 +775,11 @@ class QuizController extends GetxController {
     try {
       String baseUrl;
       if (kIsWeb) {
-        baseUrl = 'http://localhost:5001';
+        baseUrl = 'https://ai-quiz-generater-app.onrender.com';
       } else if (Platform.isAndroid) {
-        baseUrl = 'http://10.0.2.2:5001';
+        baseUrl = 'https://ai-quiz-generater-app.onrender.com';
       } else {
-        baseUrl = 'http://127.0.0.1:5001';
+        baseUrl = 'https://ai-quiz-generater-app.onrender.com';
       }
 
       final url = Uri.parse('$baseUrl/generate_quiz');
