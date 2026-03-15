@@ -8,13 +8,10 @@ import asyncio
 from typing import List, Dict, Any, Optional
 import json_repair
 
-# LangChain Imports for Agentic Workflow
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+# LangChain and Pinecone moved to lazy imports within the class
 
 # Pinecone & Existing Logic
-from pinecone import Pinecone
+# Pinecone moved to lazy imports
 from rag_service import RAGService, TranscriptNotFoundError
 
 # Initialize Environment
@@ -32,6 +29,10 @@ class QuizAgent:
     (Deep Learning & NLP components removed per user request)
     """
     def __init__(self, rag_service=None):
+        from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+        from langchain_core.prompts import PromptTemplate
+        from pinecone import Pinecone
+
         # 1. Initialize Core Components with our new FINE-TUNED model
         self.llm = ChatOpenAI(
             model="ft:gpt-4o-mini-2024-07-18:personal:quiz-generator:DIGxdncf", 
@@ -51,6 +52,7 @@ class QuizAgent:
             print("Warning: Could not access RAGService index directly.")
 
         # 2. Define the Agent's "Brain" (The Planner)
+        from langchain_core.prompts import PromptTemplate
         self.planner_prompt = PromptTemplate.from_template("""
         You are the **Lead Quiz Architect** for an exam prep platform.
         A user wants a quiz. Analyze their request and decide the best strategy.

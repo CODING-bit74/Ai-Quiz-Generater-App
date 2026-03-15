@@ -1,26 +1,26 @@
-# Import Flask for API routing and JSON utilities
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-# Knowledge base and generation logic
-from rag_service import RAGService, TranscriptNotFoundError
-from agentic_service import QuizAgent  # Import the new Agent
-
 import os
 import hashlib
 import json
 import redis
 import sys
 import psutil
+import gc
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 from functools import wraps
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+# Base Initialization
 def log_memory(stage):
-    process = psutil.Process(os.getpid())
-    mem_mb = process.memory_info().rss / (1024 * 1024)
-    print(f"[DEBUG][MEMORY] {stage}: {mem_mb:.2f} MB", file=sys.stderr)
+    try:
+        process = psutil.Process(os.getpid())
+        mem_mb = process.memory_info().rss / (1024 * 1024)
+        print(f"[DEBUG][MEMORY] {stage}: {mem_mb:.2f} MB", file=sys.stderr)
+    except:
+        pass
 
-log_memory("Imports Initialized")
+log_memory("Top of app.py")
 
 # Load environment variables
 load_dotenv()
@@ -64,6 +64,8 @@ def get_rag_service():
     if rag_service is None:
         try:
             log_memory("Starting RAG Service Init")
+            print("Importing RAGService...", file=sys.stderr)
+            from rag_service import RAGService
             print("Initializing RAG Service (Lazy)...", file=sys.stderr)
             rag_service = RAGService()
             print("RAG Service Initialized", file=sys.stderr)
@@ -79,6 +81,8 @@ def get_quiz_agent():
     if quiz_agent is None:
         try:
             log_memory("Starting Quiz Agent Init")
+            print("Importing QuizAgent...", file=sys.stderr)
+            from agentic_service import QuizAgent
             print("Initializing Quiz Agent (Lazy)...", file=sys.stderr)
             rs = get_rag_service()
             quiz_agent = QuizAgent(rag_service=rs)
@@ -248,6 +252,10 @@ def generate_quiz():
             subject=subject
         )
         log_memory("Generation Complete")
+        
+        # Explicitly clear memory after generation
+        gc.collect()
+        log_memory("Memory Cleared (Post-GC)")
         
         # --- SAVE TO REDIS CACHE ---
         if redis_client and cache_key and ("error" not in quiz_json):
