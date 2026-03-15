@@ -44,6 +44,24 @@ except Exception as e:
     print(f"Warning: Supabase client failed to initialize: {e}")
     supabase = None
 
+@app.route('/')
+def home():
+    """Root route to verify server is running."""
+    return jsonify({
+        "message": "AI Quiz Generator API is running!",
+        "version": "1.0.0",
+        "documentation": "https://github.com/CODING-bit74/Ai-Quiz-Generater-App"
+    }), 200
+
+@app.route('/health')
+def health_check():
+    """Simple health check for Render to detect the app is live."""
+    return jsonify({
+        "status": "healthy",
+        "redis": "connected" if redis_client else "disconnected",
+        "supabase": "connected" if supabase else "disconnected"
+    }), 200
+
 def verify_token(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -199,19 +217,19 @@ def generate_quiz():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+# --- SERVICE INITIALIZATION (Module Level for Production) ---
+try:
+    print("Initializing RAG Service...")
+    rag_service = RAGService()
+    
+    print("Initializing Quiz Agent...")
+    quiz_agent = QuizAgent()
+    
+    print("✅ Services Initialized Successfully")
+except Exception as e:
+    print(f"❌ Failed to initialize Services: {e}")
+
 # Application Entry Point
 if __name__ == '__main__':
-    try:
-        # Initialize services
-        print("Initializing RAG Service...")
-        rag_service = RAGService()
-        
-        print("Initializing Quiz Agent...")
-        quiz_agent = QuizAgent()
-        
-        print("✅ Services Initialized Successfully")
-    except Exception as e:
-        print(f"❌ Failed to initialize Services: {e}")
-        
-    # Start the Flask development server
+    # Start the Flask development server (Local only)
     app.run(host='0.0.0.0', port=5001, debug=True)
