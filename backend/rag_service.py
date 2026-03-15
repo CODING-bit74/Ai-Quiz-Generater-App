@@ -63,18 +63,19 @@ class RAGService:
         # Connect to the Pinecone Vector Database
         self.pc = Pinecone(api_key=PINECONE_API_KEY)
         
-        # Automatically create the index if it doesn't exist
-        if PINECONE_INDEX_NAME not in [i.name for i in self.pc.list_indexes()]:
-            print(f"Index {PINECONE_INDEX_NAME} not found. Creating...")
+        # Optimized Index Connection
+        try:
+            # Check if index exists without listing all (faster)
+            index_description = self.pc.describe_index(PINECONE_INDEX_NAME)
+            print(f"Connected to existing Pinecone index: {PINECONE_INDEX_NAME}")
+        except Exception:
+            print(f"Index {PINECONE_INDEX_NAME} not found or inaccessible. Creating...")
             from pinecone import ServerlessSpec
             self.pc.create_index(
                 name=PINECONE_INDEX_NAME,
-                dimension=1536, # Dimension for OpenAI text-embedding-3-small
+                dimension=1536,
                 metric='cosine',
-                spec=ServerlessSpec(
-                    cloud='aws',
-                    region='us-east-1'
-                )
+                spec=ServerlessSpec(cloud='aws', region='us-east-1')
             )
             print(f"Index {PINECONE_INDEX_NAME} created successfully.")
 

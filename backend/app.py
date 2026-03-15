@@ -31,18 +31,29 @@ except Exception as e:
 app = Flask(__name__)
 CORS(app) # Enable CORS for all routes
 
-# Initialize Global Instances
-rag_service = None # Kept for direct document/text adding
-quiz_agent = None  # The new brain for generation
+# --- LAZY INITIALIZATION HELPERS ---
+def get_rag_service():
+    global rag_service
+    if rag_service is None:
+        try:
+            print("Initializing RAG Service (Lazy)...")
+            rag_service = RAGService()
+            print("✅ RAG Service Initialized")
+        except Exception as e:
+            print(f"❌ Failed to initialize RAG Service: {e}")
+    return rag_service
 
-# --- SUPABASE AUTHENTICATION ---
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
-try:
-    supabase: Client = create_client(url, key)
-except Exception as e:
-    print(f"Warning: Supabase client failed to initialize: {e}")
-    supabase = None
+def get_quiz_agent():
+    global quiz_agent
+    if quiz_agent is None:
+        try:
+            print("Initializing Quiz Agent (Lazy)...")
+            rs = get_rag_service()
+            quiz_agent = QuizAgent(rag_service=rs)
+            print("✅ Quiz Agent Initialized")
+        except Exception as e:
+            print(f"❌ Failed to initialize Quiz Agent: {e}")
+    return quiz_agent
 
 @app.route('/')
 def home():
@@ -85,8 +96,8 @@ def verify_token(f):
 @app.route('/add_context', methods=['POST'])
 def add_context():
     """Endpoint to manually add text context to the knowledge base."""
-    global rag_service
-    if not rag_service:
+    rs = get_rag_service()
+    if not rs:
         return jsonify({"error": "RAG Service not initialized. Check API Key."}), 500
         
     # Extract the JSON payload
@@ -103,8 +114,8 @@ def add_context():
 @app.route('/upload_document', methods=['POST'])
 def upload_document():
     """Endpoint to upload and index PDF or Text documents."""
-    global rag_service
-    if not rag_service:
+    rs = get_rag_service()
+    if not rs:
         return jsonify({"error": "RAG Service not initialized. Check API Key."}), 500
         
     # Check if a file was actually sent in the request
@@ -126,7 +137,7 @@ def upload_document():
         
         try:
             # Step 2: Delegate processing to the RAG service
-            success = rag_service.add_document_file(file_path, file.filename)
+            success = rs.add_document_file(file_path, file.filename)
             # Step 3: Delete the local temp file after indexing is complete
             os.remove(file_path)
             
@@ -144,8 +155,8 @@ def upload_document():
 @verify_token
 def generate_quiz():
     """Main endpoint to generate a quiz using the Agentic Workflow."""
-    global quiz_agent
-    if not quiz_agent:
+    qa = get_quiz_agent()
+    if not qa:
         return jsonify({"error": "Quiz Agent not initialized. Check API Key."}), 500
 
     # Parse JSON data from the request body
@@ -189,7 +200,7 @@ def generate_quiz():
 
     try:
         # Call the Agentic Service
-        quiz_json = quiz_agent.generate_quiz_agentic(
+        quiz_json = qa.generate_quiz_agentic(
             topic, 
             num_questions=num_questions, 
             difficulty=difficulty, 
@@ -216,18 +227,6 @@ def generate_quiz():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
-# --- SERVICE INITIALIZATION (Module Level for Production) ---
-try:
-    print("Initializing RAG Service...")
-    rag_service = RAGService()
-    
-    print("Initializing Quiz Agent...")
-    quiz_agent = QuizAgent()
-    
-    print("✅ Services Initialized Successfully")
-except Exception as e:
-    print(f"❌ Failed to initialize Services: {e}")
 
 # Application Entry Point
 if __name__ == '__main__':

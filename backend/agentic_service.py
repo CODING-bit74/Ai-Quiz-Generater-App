@@ -31,7 +31,7 @@ class QuizAgent:
     Uses LLM reasoning to Plan -> Retrieve -> Generate.
     (Deep Learning & NLP components removed per user request)
     """
-    def __init__(self):
+    def __init__(self, rag_service=None):
         # 1. Initialize Core Components with our new FINE-TUNED model
         self.llm = ChatOpenAI(
             model="ft:gpt-4o-mini-2024-07-18:personal:quiz-generator:DIGxdncf", 
@@ -44,7 +44,7 @@ class QuizAgent:
         )
         
         # Reuse existing RAG service for low-level ops
-        self.rag_service = RAGService()
+        self.rag_service = rag_service or RAGService()
         try:
             self.index = self.rag_service.index 
         except AttributeError:
