@@ -1,5 +1,6 @@
 # Import Flask for API routing and JSON utilities
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 # Knowledge base and generation logic
 from rag_service import RAGService, TranscriptNotFoundError
 from agentic_service import QuizAgent  # Import the new Agent
@@ -28,6 +29,7 @@ except Exception as e:
 
 # Initialize the Flask application
 app = Flask(__name__)
+CORS(app) # Enable CORS for all routes
 
 # Initialize Global Instances
 rag_service = None # Kept for direct document/text adding
