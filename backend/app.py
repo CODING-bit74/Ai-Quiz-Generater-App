@@ -4,10 +4,6 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/ping')
-def ping():
-    return jsonify({"status": "pong"}), 200
-
 # Knowledge base and generation logic
 from rag_service import RAGService, TranscriptNotFoundError
 from agentic_service import QuizAgent  # Import the new Agent
