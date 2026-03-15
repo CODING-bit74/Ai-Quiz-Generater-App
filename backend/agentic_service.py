@@ -207,7 +207,7 @@ class QuizAgent:
             text = self._clean_json(response.content)
             return json.loads(text)
         except Exception as e:
-            print(f"❌ Planner Error: {e}. Defaulting based on input_type.")
+            print(f" Planner Error: {e}. Defaulting based on input_type.")
             if input_type == 'link': return {"strategy": "SCRAPE_URL"}
             if input_type == 'document': return {"strategy": "READ_DOC"}
             return {"strategy": "SEARCH_KB"}
@@ -219,7 +219,7 @@ class QuizAgent:
             exp_chain = self.expander_prompt | self.llm
             response = exp_chain.invoke({"topic": topic})
             queries = json.loads(self._clean_json(response.content))
-            print(f"🔍 [SEARCH] Execution Queries: {queries}")
+            print(f" [SEARCH] Execution Queries: {queries}")
             
             # 2. Multi-Query Search
             aggregated_docs = []
@@ -237,11 +237,11 @@ class QuizAgent:
             
             # 3. Deduplication and Ranking (Simple)
             unique_docs = list(dict.fromkeys(aggregated_docs)) # Preserves order
-            print(f"📚 [SEARCH] Found {len(unique_docs)} unique chunks.")
+            print(f" [SEARCH] Found {len(unique_docs)} unique chunks.")
             
             if not unique_docs:
                 # Fallback: One last broad search
-                print("🔄 [SEARCH] No results. Trying broad fallback search.")
+                print(" [SEARCH] No results. Trying broad fallback search.")
                 embedding = self.embeddings.embed_query(topic)
                 results = self.index.query(vector=embedding, top_k=3, include_metadata=True)
                 unique_docs = [m['metadata']['text'] for m in results['matches'] if 'text' in m['metadata']]
@@ -249,23 +249,23 @@ class QuizAgent:
             return "\n\n".join(unique_docs[:8]) # Return more chunks for richer context
             
         except Exception as e:
-            print(f"❌ Search Error: {e}")
+            print(f" Search Error: {e}")
             return ""
 
     def _execute_scrape(self, url: str) -> str:
         """Executes URL scraping via RAGService."""
-        print(f"🌐 [SCRAPER] Fetching content from: {url}")
+        print(f" [SCRAPER] Fetching content from: {url}")
         if "youtube.com" in url or "youtu.be" in url:
             return self.rag_service._fetch_youtube_transcript(url)
         return self.rag_service._scrape_url(url)
 
     def _execute_read_doc(self, filename: str) -> str:
         """Executes document retrieval with specific filtering."""
-        print(f"📄 [DOC_READER] Searching for content in: {filename}")
+        print(f" [DOC_READER] Searching for content in: {filename}")
         # Try both direct match and contains match for safety
         context = self.rag_service._retrieve_context(filename, "Summarize all key educational concepts and facts")
         if not context:
-             print(f"⚠️ [DOC_READER] No direct match for {filename}. Trying partial match.")
+             print(f" [DOC_READER] No direct match for {filename}. Trying partial match.")
              # This would require more complex filtering in Pinecone, 
              # but we'll stick to what _retrieve_context provides for now.
              pass

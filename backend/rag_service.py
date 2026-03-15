@@ -446,10 +446,10 @@ Return ONLY the JSON. No conversational text.
             try:
                 cached_content = redis_client.get(cache_key)
                 if cached_content:
-                    print(f"⚡ CACHE HIT! Returning scraped content for {url}")
+                    print(f" CACHE HIT! Returning scraped content for {url}")
                     return cached_content
             except Exception as e:
-                print(f"⚠️ Redis read error: {e}")
+                print(f" Redis read error: {e}")
 
         try:
             # Emulate a high-reputation browser
@@ -527,20 +527,20 @@ Return ONLY the JSON. No conversational text.
                     video_id = url.split("/live/")[1].split("?")[0]
             
             if not video_id:
-                print("❌ Could not extract video ID from URL")
+                print(" Could not extract video ID from URL")
                 return ""
 
-            print(f"🎬 [YOUTUBE] video_id: {video_id}")
+            print(f" [YOUTUBE] video_id: {video_id}")
             
             cache_key = f"yt_transcript:{video_id}"
             if redis_client:
                 try:
                     cached_transcript = redis_client.get(cache_key)
                     if cached_transcript:
-                        print(f"⚡ CACHE HIT! Returning transcript for video {video_id}")
+                        print(f" CACHE HIT! Returning transcript for video {video_id}")
                         return cached_transcript
                 except Exception as e:
-                    print(f"⚠️ Redis read error: {e}")
+                    print(f" Redis read error: {e}")
             
             try:
                 # IMPORTANT: Some versions of this library require instantiation
@@ -589,7 +589,7 @@ Return ONLY the JSON. No conversational text.
                 full_text = " ".join(full_text_parts)
                 result_text = full_text[:25000]
                 
-                print(f"✅ [YOUTUBE] Successfully fetched {len(result_text)} characters.")
+                print(f" [YOUTUBE] Successfully fetched {len(result_text)} characters.")
                 
                 if redis_client and result_text:
                     try:
@@ -601,18 +601,18 @@ Return ONLY the JSON. No conversational text.
                 return result_text
                 
             except Exception as e:
-                print(f"⚠️ [YOUTUBE] Transcript missing/disabled: {e}")
+                print(f" [YOUTUBE] Transcript missing/disabled: {e}")
                 # FALLBACK: Try to scrape page title/description if transcript fails
                 return self._scrape_youtube_metadata(url)
         
         except Exception as e:
-            print(f"❌ [YOUTUBE] Critical Error: {e}")
+            print(f" [YOUTUBE] Critical Error: {e}")
             return ""
 
     def _scrape_youtube_metadata(self, url: str) -> str:
         """Fallback: Scrapes YouTube page title and description if transcript is missing."""
         try:
-            print(f"🔎 [YOUTUBE] Scrapping metadata as fallback for: {url}")
+            print(f" [YOUTUBE] Scrapping metadata as fallback for: {url}")
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
             response = requests.get(url, headers=headers, timeout=10)
             if response.status_code != 200: return ""
@@ -627,9 +627,9 @@ Return ONLY the JSON. No conversational text.
                 description = desc_tag.get('content', '')
             
             if title or description:
-                print(f"✅ [YOUTUBE] Metadata found: {title}")
+                print(f" [YOUTUBE] Metadata found: {title}")
                 return f"Topic: {title}\nSummary: {description}"
             return ""
         except Exception as e:
-            print(f"❌ [YOUTUBE] Metadata scraping failed: {e}")
+            print(f" [YOUTUBE] Metadata scraping failed: {e}")
             return ""
