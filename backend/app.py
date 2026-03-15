@@ -9,9 +9,18 @@ import os
 import hashlib
 import json
 import redis
+import sys
+import psutil
 from functools import wraps
 from dotenv import load_dotenv
 from supabase import create_client, Client
+
+def log_memory(stage):
+    process = psutil.Process(os.getpid())
+    mem_mb = process.memory_info().rss / (1024 * 1024)
+    print(f"[DEBUG][MEMORY] {stage}: {mem_mb:.2f} MB", file=sys.stderr)
+
+log_memory("Imports Initialized")
 
 # Load environment variables
 load_dotenv()
@@ -54,23 +63,31 @@ def get_rag_service():
     global rag_service
     if rag_service is None:
         try:
-            print("Initializing RAG Service (Lazy)...")
+            log_memory("Starting RAG Service Init")
+            print("Initializing RAG Service (Lazy)...", file=sys.stderr)
             rag_service = RAGService()
-            print("✅ RAG Service Initialized")
+            print("RAG Service Initialized", file=sys.stderr)
+            log_memory("RAG Service Init Complete")
         except Exception as e:
-            print(f"❌ Failed to initialize RAG Service: {e}")
+            print(f"Error: Failed to initialize RAG Service: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
     return rag_service
 
 def get_quiz_agent():
     global quiz_agent
     if quiz_agent is None:
         try:
-            print("Initializing Quiz Agent (Lazy)...")
+            log_memory("Starting Quiz Agent Init")
+            print("Initializing Quiz Agent (Lazy)...", file=sys.stderr)
             rs = get_rag_service()
             quiz_agent = QuizAgent(rag_service=rs)
-            print("✅ Quiz Agent Initialized")
+            print("Quiz Agent Initialized", file=sys.stderr)
+            log_memory("Quiz Agent Init Complete")
         except Exception as e:
-            print(f"❌ Failed to initialize Quiz Agent: {e}")
+            print(f"Error: Failed to initialize Quiz Agent: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
     return quiz_agent
 
 @app.route('/')
@@ -216,8 +233,10 @@ def generate_quiz():
         except Exception as e:
             print(f"⚠️ Redis read error: {e}")
 
+    log_memory(f"Start generate_quiz for topic: {topic}")
     try:
         # Call the Agentic Service
+        print(f"Calling generate_quiz_agentic for topic: {topic}", file=sys.stderr)
         quiz_json = qa.generate_quiz_agentic(
             topic, 
             num_questions=num_questions, 
@@ -228,6 +247,7 @@ def generate_quiz():
             exam_name=exam_name,
             subject=subject
         )
+        log_memory("Generation Complete")
         
         # --- SAVE TO REDIS CACHE ---
         if redis_client and cache_key and ("error" not in quiz_json):
