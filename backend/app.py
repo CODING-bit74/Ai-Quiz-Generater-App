@@ -31,6 +31,24 @@ except Exception as e:
 app = Flask(__name__)
 CORS(app) # Enable CORS for all routes
 
+# --- GLOBAL INSTANCES ---
+rag_service = None
+quiz_agent = None
+
+# --- SUPABASE AUTHENTICATION ---
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+try:
+    if url and key:
+        supabase: Client = create_client(url, key)
+        print("✅ Supabase client initialized")
+    else:
+        print("⚠️ Warning: SUPABASE_URL or SUPABASE_KEY missing")
+        supabase = None
+except Exception as e:
+    print(f"⚠️ Warning: Supabase client failed to initialize: {e}")
+    supabase = None
+
 # --- LAZY INITIALIZATION HELPERS ---
 def get_rag_service():
     global rag_service
