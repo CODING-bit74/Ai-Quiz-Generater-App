@@ -4,14 +4,13 @@ import json
 import re
 import requests
 import tempfile
+import random
 import redis
+from bs4 import BeautifulSoup
+from youtube_transcript_api import YouTubeTranscriptApi
 from dotenv import load_dotenv
 
 # Base configuration
-current_dir = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(current_dir, '.env')
-load_dotenv(dotenv_path=env_path)
-
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, '.env')
 load_dotenv(dotenv_path=env_path)
@@ -43,10 +42,16 @@ class RAGService:
     It manages document indexing in Pinecone and quiz generation using OpenAI.
     """
     def __init__(self):
-        from langchain_openai import OpenAIEmbeddings
+        from langchain_openai import OpenAIEmbeddings, ChatOpenAI
         from pinecone import Pinecone
-        from langchain_openai import ChatOpenAI
         from langchain_text_splitters import RecursiveCharacterTextSplitter
+        from langchain_core.prompts import PromptTemplate
+        from langchain_community.document_loaders import PyPDFLoader, TextLoader
+
+        # Store these as instance attributes so methods can use them
+        self._PromptTemplate = PromptTemplate
+        self._PyPDFLoader = PyPDFLoader
+        self._TextLoader = TextLoader
 
         # Initialize OpenAI Embeddings model for converting text to vectors
         self.embeddings = OpenAIEmbeddings(
@@ -127,9 +132,9 @@ class RAGService:
         try:
             # Choose the appropriate loader based on file extension
             if filename.lower().endswith('.pdf'):
-                loader = PyPDFLoader(file_path)
+                loader = self._PyPDFLoader(file_path)
             else:
-                loader = TextLoader(file_path)
+                loader = self._TextLoader(file_path)
             
             # Load the raw document data
             documents = loader.load()
@@ -317,7 +322,7 @@ Return ONLY the JSON. No markdown wrappers.
         selected_perspective = random.choice(perspectives)
 
         # Build the chain and invoke the generation with dynamic variables
-        prompt = PromptTemplate.from_template(prompt_template)
+        prompt = self._PromptTemplate.from_template(prompt_template)
         chain = prompt | self.llm
         
         response_msg = chain.invoke({
@@ -383,7 +388,7 @@ Return ONLY the JSON. No conversational text.
 """
         import re
         try:
-            prompt = PromptTemplate.from_template(refinement_prompt)
+            prompt = self._PromptTemplate.from_template(refinement_prompt)
             chain = prompt | self.llm
             response_msg = chain.invoke({"content": raw_text[:8000], "source": source})
             response = response_msg.content
