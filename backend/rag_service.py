@@ -1,27 +1,16 @@
+# Core standard library imports
 import os
-# OpenAI integration for embeddings and chat models
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-# Pinecone vector database for storing and querying document embeddings
-from pinecone import Pinecone, ServerlessSpec
-# Document loaders for processing different file types
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
-# Utility to split long documents into smaller, manageable chunks
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-# Core data structures for LangChain
-from langchain_core.documents import Document
-from langchain_core.prompts import PromptTemplate
 import json
 import re
 import requests
 import tempfile
-# BeautifulSoup for web scraping and HTML parsing
-from bs4 import BeautifulSoup
-from youtube_transcript_api import YouTubeTranscriptApi
-
-# Load environment variables from .env file
-from dotenv import load_dotenv
-import os
 import redis
+from dotenv import load_dotenv
+
+# Base configuration
+current_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(current_dir, '.env')
+load_dotenv(dotenv_path=env_path)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, '.env')
@@ -54,6 +43,11 @@ class RAGService:
     It manages document indexing in Pinecone and quiz generation using OpenAI.
     """
     def __init__(self):
+        from langchain_openai import OpenAIEmbeddings
+        from pinecone import Pinecone
+        from langchain_openai import ChatOpenAI
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+
         # Initialize OpenAI Embeddings model for converting text to vectors
         self.embeddings = OpenAIEmbeddings(
             model="text-embedding-3-small",
