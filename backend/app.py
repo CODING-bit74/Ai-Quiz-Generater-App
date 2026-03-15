@@ -25,9 +25,9 @@ try:
     redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
     # Test connection
     redis_client.ping()
-    print("✅ Successfully connected to Redis!")
+    print("Successfully connected to Redis!")
 except Exception as e:
-    print(f"⚠️ Warning: Redis connection failed. Caching will be disabled. Error: {e}")
+    print(f"Warning: Redis connection failed. Caching will be disabled. Error: {e}")
     redis_client = None
 
 # --- CONFIGURATION & MIDDLEWARE ---
@@ -51,12 +51,12 @@ key: str = os.environ.get("SUPABASE_KEY")
 try:
     if url and key:
         supabase: Client = create_client(url, key)
-        print("✅ Supabase client initialized")
+        print("Supabase client initialized")
     else:
-        print("⚠️ Warning: SUPABASE_URL or SUPABASE_KEY missing")
+        print("Warning: SUPABASE_URL or SUPABASE_KEY missing")
         supabase = None
 except Exception as e:
-    print(f"⚠️ Warning: Supabase client failed to initialize: {e}")
+    print(f"Warning: Supabase client failed to initialize: {e}")
     supabase = None
 
 # --- LAZY INITIALIZATION HELPERS ---
@@ -66,9 +66,9 @@ def get_rag_service():
         try:
             print("Initializing RAG Service (Lazy)...")
             rag_service = RAGService()
-            print("✅ RAG Service Initialized")
+            print("RAG Service Initialized")
         except Exception as e:
-            print(f"❌ Failed to initialize RAG Service: {e}")
+            print(f"Error: Failed to initialize RAG Service: {e}")
     return rag_service
 
 def get_quiz_agent():
@@ -78,9 +78,9 @@ def get_quiz_agent():
             print("Initializing Quiz Agent (Lazy)...")
             rs = get_rag_service()
             quiz_agent = QuizAgent(rag_service=rs)
-            print("✅ Quiz Agent Initialized")
+            print("Quiz Agent Initialized")
         except Exception as e:
-            print(f"❌ Failed to initialize Quiz Agent: {e}")
+            print(f"Error: Failed to initialize Quiz Agent: {e}")
     return quiz_agent
 
 @app.route('/')
@@ -221,10 +221,10 @@ def generate_quiz():
         try:
             cached_quiz = redis_client.get(cache_key)
             if cached_quiz:
-                print(f"⚡ CACHE HIT! Returning cached quiz for topic '{topic}'")
+                print(f"CACHE HIT! Returning cached quiz for topic '{topic}'")
                 return cached_quiz, 200, {'Content-Type': 'application/json'}
         except Exception as e:
-            print(f"⚠️ Redis read error: {e}")
+            print(f"Warning: Redis read error: {e}")
 
     try:
         # Call the Agentic Service
@@ -244,9 +244,9 @@ def generate_quiz():
             try:
                 # Cache successful quizzes for 24 hours (86400 seconds)
                 redis_client.setex(cache_key, 86400, quiz_json)
-                print(f"💾 Saved generated quiz to cache (TTL: 24h)")
+                print(f"Saved generated quiz to cache (TTL: 24h)")
             except Exception as e:
-                 print(f"⚠️ Redis write error: {e}")
+                 print(f"Warning: Redis write error: {e}")
 
         return quiz_json, 200, {'Content-Type': 'application/json'}
     except TranscriptNotFoundError as e:

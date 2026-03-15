@@ -101,12 +101,12 @@ class QuizAgent:
         """
         The main entry point for the Agentic Workflow.
         """
-        print(f"\n🤖 [AGENT START] Topic: {topic}")
+        print(f"AGENT START Topic: {topic}")
         
         # --- Pre-Planning Check for URLs ---
         current_input_type = kwargs.get('input_type', 'topic')
         if current_input_type == 'topic' and (topic.startswith('http') or 'youtube.com' in topic or 'youtu.be' in topic):
-            print("🚀 [AGENT] URL detected in Topic. Overriding input_type to 'link'.")
+            print("AGENT URL detected in Topic. Overriding input_type to 'link'.")
             kwargs['input_type'] = 'link'
             current_input_type = 'link'
 
@@ -132,7 +132,7 @@ class QuizAgent:
         else:
             effective_topic = search_topic
         
-        print(f"🧠 [PLANNER] Strategy: {strategy} ({reasoning})")
+        print(f"PLANNER Strategy: {strategy} ({reasoning})")
         
         context_text = ""
         
@@ -143,7 +143,7 @@ class QuizAgent:
             context_text = self._execute_scrape(topic)
             # --- INTELLIGENT FALLBACK: If scrape failed or is too small, try searching Knowledge Base ---
             if not context_text or len(context_text) < 200:
-                print("⚠️ [AGENT] Scrape yield too low. Swapping to SEARCH_KB fallback.")
+                print("Warning: [AGENT] Scrape yield too low. Swapping to SEARCH_KB fallback.")
                 # If it's a YouTube URL, we might have title/desc in context_text now
                 search_query = effective_topic
                 if "Topic: " in context_text:
@@ -159,7 +159,7 @@ class QuizAgent:
             pyq_topic = f"{effective_topic} Previous Year Questions PYQs"
             context_text = self._execute_search_kb(pyq_topic)
             if not context_text or len(context_text) < 100:
-                print("⚠️ [AGENT] No specific PYQs found. Searching general knowledge base.")
+                print("Warning: [AGENT] No specific PYQs found. Searching general knowledge base.")
                 context_text = self._execute_search_kb(effective_topic)
         elif strategy == "DIRECT_GEN":
             if current_input_type == 'text':
@@ -170,11 +170,11 @@ class QuizAgent:
         
         # Final Fallback for empty context
         if not context_text or len(context_text) < 100:
-             print("⚠️ [AGENT] Final context yield empty. Forcing general knowledge fallback.")
+             print("Warning: [AGENT] Final context yield empty. Forcing general knowledge fallback.")
              context_text = "General Knowledge"
 
         # --- Step 3: GENERATION ---
-        print("✍️ [GENERATOR] Crafting quiz with agent-retrieved context...")
+        print("GENERATOR Crafting quiz with agent-retrieved context...")
         
         return self._generate_final_quiz(
             context=context_text,
@@ -301,7 +301,7 @@ class QuizAgent:
         elif difficulty == "Hard":
             diff_nuance = "Create complex, multi-statement, or critical thinking questions."
             
-        return f"{base_role} {style_nuance} {diff_nuance} Mode: Agentic."
+        return f"{base_role} {style_nuance} {diff_nuance} Mode: Agentic"
 
     def _generate_final_quiz(self, context, topic, num, diff, lang, input_type, sector, exam, subject, persona):
         """
