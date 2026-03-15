@@ -33,6 +33,9 @@ class QuizAgent:
         from langchain_core.prompts import PromptTemplate
         from pinecone import Pinecone
 
+        # Store for use in other methods
+        self._PromptTemplate = PromptTemplate
+
         # 1. Initialize Core Components with our new FINE-TUNED model
         self.llm = ChatOpenAI(
             model="ft:gpt-4o-mini-2024-07-18:personal:quiz-generator:DIGxdncf", 
@@ -336,7 +339,7 @@ TARGET: {target_info}
 
             try:
                 # Use a fresh prompt each time to clear previous state
-                prompt = PromptTemplate.from_template(current_prompt_template)
+                prompt = self._PromptTemplate.from_template(current_prompt_template)
                 chain = prompt | self.llm
                 
                 response_msg = chain.invoke({"context": context[:15000]})
